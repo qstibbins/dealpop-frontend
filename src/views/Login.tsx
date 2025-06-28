@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function Login() {
   const handleLogin = () => {
     // Replace with Auth0 or actual login logic later

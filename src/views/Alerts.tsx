@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function Alerts() {
   return (
     <main className="p-6 flex-1 bg-white">
