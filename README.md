@@ -88,6 +88,22 @@ The project uses a custom color palette defined in `tailwind.config.ts`:
 - **PostCSS** - CSS processing
 - **ESLint** - Code linting
 
+## Environment Variables
+
+To enable Auth0 authentication, create a `.env` file in the project root with the following variables:
+
+```env
+VITE_ENABLE_AUTH=true
+VITE_AUTH0_DOMAIN=your-auth0-domain
+VITE_AUTH0_CLIENT_ID=your-auth0-client-id
+VITE_AUTH0_API_IDENTIFIER=your-auth0-api-identifier
+```
+
+- Replace the values with your actual Auth0 credentials.
+- After updating the `.env` file, restart the development server.
+
+If you set `VITE_ENABLE_AUTH=false`, authentication will be disabled.
+
 ## License
 
 This project is licensed under the MIT License. 
