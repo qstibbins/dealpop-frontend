@@ -1,6 +1,4 @@
-import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import ProductCard from '../components/ProductCard';
 
 const dummyProducts = [
   { imageUrl: '/img/mixer.png', title: 'Kitchen Mixer', price: '499.95', vendor: 'Amazon', targetPrice: '300', expiresIn: '2 days' },
