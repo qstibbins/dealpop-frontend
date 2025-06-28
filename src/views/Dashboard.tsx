@@ -1,5 +1,6 @@
 import React from 'react';
 import ProductCard from '../components/ProductCard';
+import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
   const dummyProducts = [
@@ -26,7 +27,9 @@ export default function Dashboard() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {dummyProducts.map((p, i) => (
-          <ProductCard key={i} {...p} />
+          <Link key={i} to={`/product/${i}`} className="block">
+            <ProductCard {...p} />
+          </Link>
         ))}
       </div>
     </main>
