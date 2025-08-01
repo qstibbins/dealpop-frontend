@@ -24,6 +24,7 @@ export interface ExtractedProduct {
   capacity?: string;
   vendor?: string;
   url: string;
+  imageUrl?: string; // Add image URL field
   extractedAt: string;
   targetPrice?: string;
   expiresIn?: string;

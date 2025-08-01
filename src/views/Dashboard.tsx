@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ChromeStorageService } from '../services/chromeStorage';
 import { SearchService } from '../services/searchService';
+import { ImageService } from '../services/imageService';
 import SearchFiltersComponent from '../components/SearchFilters';
 import SearchResults from '../components/SearchResults';
 import { useSearch } from '../hooks/useSearch';
@@ -76,7 +77,7 @@ export default function Dashboard() {
         const extractedProducts = await ChromeStorageService.getProducts();
         let convertedProducts: Product[] = extractedProducts.map(product => ({
           id: product.id,
-          imageUrl: `${import.meta.env.BASE_URL}img/laptop.png`, // Default image
+          imageUrl: product.imageUrl || ImageService.getFallbackImage(product.product_name), // Use extracted image or fallback
           title: product.product_name,
           price: product.price,
           vendor: product.vendor || 'Unknown',
@@ -125,7 +126,7 @@ export default function Dashboard() {
     ChromeStorageService.onStorageChange((extractedProducts) => {
       const convertedProducts: Product[] = extractedProducts.map(product => ({
         id: product.id,
-        imageUrl: `${import.meta.env.BASE_URL}img/laptop.png`,
+        imageUrl: product.imageUrl || ImageService.getFallbackImage(product.product_name), // Use extracted image or fallback
         title: product.product_name,
         price: product.price,
         vendor: product.vendor || 'Unknown',
@@ -139,6 +140,8 @@ export default function Dashboard() {
       setProducts(convertedProducts);
     });
   }, []);
+
+
 
   // Filter products based on search criteria
   const filteredProducts = useMemo(() => {
