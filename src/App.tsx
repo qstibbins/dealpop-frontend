@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { AlertProvider } from './contexts/AlertContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 import Sidebar from './layout/Sidebar';
 import Dashboard from './views/Dashboard';
@@ -15,53 +16,55 @@ import './styles/theme.css'
 function App() {
   return (
     <AuthProvider>
-      <div className="flex">
-        <Routes>
-          <Route path="/login" element={<ABTestLogin />} />
-          <Route path="/login-v2" element={<LoginV2 />} />
-          <Route path="/ab-test-analytics" element={<ABTestDashboard />} />
-          <Route path="/" element={
-            <ProtectedRoute>
-              <>
-                <Sidebar />
-                <Dashboard />
-              </>
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <>
-                <Sidebar />
-                <Dashboard />
-              </>
-            </ProtectedRoute>
-          } />
-          <Route path="/product/:id" element={
-            <ProtectedRoute>
-              <>
-                <Sidebar />
-                <ProductDetail />
-              </>
-            </ProtectedRoute>
-          } />
-          <Route path="/alerts" element={
-            <ProtectedRoute>
-              <>
-                <Sidebar />
-                <Alerts />
-              </>
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <>
-                <Sidebar />
-                <Settings />
-              </>
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </div>
+      <AlertProvider>
+        <div className="flex">
+          <Routes>
+            <Route path="/login" element={<ABTestLogin />} />
+            <Route path="/login-v2" element={<LoginV2 />} />
+            <Route path="/ab-test-analytics" element={<ABTestDashboard />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <>
+                  <Sidebar />
+                  <Dashboard />
+                </>
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <>
+                  <Sidebar />
+                  <Dashboard />
+                </>
+              </ProtectedRoute>
+            } />
+            <Route path="/product/:id" element={
+              <ProtectedRoute>
+                <>
+                  <Sidebar />
+                  <ProductDetail />
+                </>
+              </ProtectedRoute>
+            } />
+            <Route path="/alerts" element={
+              <ProtectedRoute>
+                <>
+                  <Sidebar />
+                  <Alerts />
+                </>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <>
+                  <Sidebar />
+                  <Settings />
+                </>
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </div>
+      </AlertProvider>
     </AuthProvider>
   )
 }
