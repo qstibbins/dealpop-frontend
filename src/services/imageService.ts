@@ -21,26 +21,30 @@ export class ImageService {
    */
   static getFallbackImage(productName: string): string {
     const title = productName.toLowerCase();
-    const baseUrl = import.meta.env.BASE_URL;
+    
+    let fallbackPath: string;
     
     if (title.includes('laptop') || title.includes('computer') || title.includes('pc')) {
-      return `${baseUrl}${this.FALLBACK_IMAGES.laptop}`;
+      fallbackPath = this.FALLBACK_IMAGES.laptop;
     } else if (title.includes('headphone') || title.includes('audio') || title.includes('speaker')) {
-      return `${baseUrl}${this.FALLBACK_IMAGES.headphones}`;
+      fallbackPath = this.FALLBACK_IMAGES.headphones;
     } else if (title.includes('sofa') || title.includes('chair') || title.includes('furniture')) {
-      return `${baseUrl}${this.FALLBACK_IMAGES.sofa}`;
+      fallbackPath = this.FALLBACK_IMAGES.sofa;
     } else if (title.includes('watch') || title.includes('smartwatch')) {
-      return `${baseUrl}${this.FALLBACK_IMAGES.watch}`;
+      fallbackPath = this.FALLBACK_IMAGES.watch;
     } else if (title.includes('skincare') || title.includes('beauty') || title.includes('cosmetic')) {
-      return `${baseUrl}${this.FALLBACK_IMAGES.skincare}`;
+      fallbackPath = this.FALLBACK_IMAGES.skincare;
     } else if (title.includes('power') || title.includes('battery') || title.includes('charger')) {
-      return `${baseUrl}${this.FALLBACK_IMAGES.powerbank}`;
+      fallbackPath = this.FALLBACK_IMAGES.powerbank;
     } else if (title.includes('mixer') || title.includes('blender') || title.includes('kitchen')) {
-      return `${baseUrl}${this.FALLBACK_IMAGES.mixer}`;
+      fallbackPath = this.FALLBACK_IMAGES.mixer;
     } else {
       // Default fallback
-      return `${baseUrl}${this.FALLBACK_IMAGES.laptop}`;
+      fallbackPath = this.FALLBACK_IMAGES.laptop;
     }
+    
+    console.log(`Fallback image for "${productName}": "${fallbackPath}"`);
+    return fallbackPath;
   }
 
   /**
@@ -48,6 +52,11 @@ export class ImageService {
    */
   static optimizeImageUrl(imageUrl: string, config: ImageConfig = {}): string {
     if (!imageUrl || imageUrl.startsWith('data:')) {
+      return imageUrl;
+    }
+
+    // For relative paths, return as-is (no optimization needed for local images)
+    if (imageUrl.startsWith('/')) {
       return imageUrl;
     }
 
@@ -93,9 +102,20 @@ export class ImageService {
   static isValidImageUrl(imageUrl: string): boolean {
     if (!imageUrl) return false;
     
+    // Handle relative paths (starting with /)
+    if (imageUrl.startsWith('/')) {
+      return true;
+    }
+    
+    // Handle data URLs
+    if (imageUrl.startsWith('data:')) {
+      return true;
+    }
+    
+    // Handle absolute URLs
     try {
       const url = new URL(imageUrl);
-      return ['http:', 'https:', 'data:'].includes(url.protocol);
+      return ['http:', 'https:'].includes(url.protocol);
     } catch {
       return false;
     }
@@ -105,16 +125,22 @@ export class ImageService {
    * Get optimized image URL for product cards
    */
   static getProductCardImage(imageUrl: string, productName: string): string {
+    console.log(`getProductCardImage called for "${productName}" with URL: "${imageUrl}"`);
+    
     if (!this.isValidImageUrl(imageUrl)) {
+      console.log(`Invalid URL for "${productName}", using fallback`);
       return this.getFallbackImage(productName);
     }
 
-    return this.optimizeImageUrl(imageUrl, {
+    const optimizedUrl = this.optimizeImageUrl(imageUrl, {
       width: 320,
       height: 320,
       quality: 80,
       format: 'webp'
     });
+    
+    console.log(`Optimized URL for "${productName}": "${optimizedUrl}"`);
+    return optimizedUrl;
   }
 
   /**

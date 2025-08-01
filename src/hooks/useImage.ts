@@ -21,50 +21,56 @@ export function useImage(
 ): UseImageReturn {
   const { fallbackImage, optimize = true, preload = false } = options;
   
+  console.log(`useImage called for "${productName}" with URL: "${imageUrl}"`);
+  
   const [imageState, setImageState] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [currentImageUrl, setCurrentImageUrl] = useState(() => {
-    if (optimize) {
-      return ImageService.getProductCardImage(imageUrl, productName);
-    }
-    return imageUrl || ImageService.getFallbackImage(productName);
+    // Use the imageUrl directly or fallback
+    const finalUrl = imageUrl || ImageService.getFallbackImage(productName);
+    console.log(`Initial URL for "${productName}": "${finalUrl}"`);
+    return finalUrl;
   });
   const [error, setError] = useState<string | null>(null);
 
-  const getOptimizedUrl = (url: string) => {
-    if (!url) return ImageService.getFallbackImage(productName);
-    if (optimize) {
-      return ImageService.getProductCardImage(url, productName);
-    }
-    return url;
-  };
-
   const loadImage = async (url: string) => {
+    console.log(`loadImage called for "${productName}" with URL: "${url}"`);
     setImageState('loading');
     setError(null);
 
     try {
-      if (preload) {
-        await ImageService.preloadImage(url);
+      // If URL is empty or invalid, use fallback immediately
+      if (!url || url.trim() === '') {
+        console.log(`Empty URL for "${productName}", using fallback`);
+        const fallback = fallbackImage || ImageService.getFallbackImage(productName);
+        setCurrentImageUrl(fallback);
+        loadImage(fallback);
+        return;
       }
-      
-      // Simulate image loading for better UX
+
+      // Create a new image element
       const img = new Image();
       img.onload = () => {
+        console.log(`Image loaded successfully for "${productName}": "${url}"`);
         setImageState('loaded');
         setError(null);
       };
       img.onerror = () => {
+        console.warn(`Failed to load image for "${productName}": "${url}"`);
         const fallback = fallbackImage || ImageService.getFallbackImage(productName);
         if (url !== fallback) {
+          console.log(`Trying fallback for "${productName}": "${fallback}"`);
           setCurrentImageUrl(fallback);
           loadImage(fallback);
         } else {
+          console.error(`Fallback also failed for "${productName}": "${fallback}"`);
           setImageState('error');
           setError('Failed to load image');
         }
       };
+      console.log(`Setting img.src for "${productName}": "${url}"`);
       img.src = url;
     } catch (err) {
+      console.error(`Error loading image for "${productName}": "${url}"`, err);
       const fallback = fallbackImage || ImageService.getFallbackImage(productName);
       if (url !== fallback) {
         setCurrentImageUrl(fallback);
@@ -80,13 +86,10 @@ export function useImage(
     loadImage(currentImageUrl);
   };
 
+  // Load image when component mounts or URL changes
   useEffect(() => {
-    const optimizedUrl = getOptimizedUrl(imageUrl);
-    if (optimizedUrl !== currentImageUrl) {
-      setCurrentImageUrl(optimizedUrl);
-      loadImage(optimizedUrl);
-    }
-  }, [imageUrl, productName, optimize]);
+    loadImage(currentImageUrl);
+  }, [currentImageUrl]);
 
   return {
     imageState,
