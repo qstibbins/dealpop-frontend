@@ -10,12 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "firebase": "^12.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.6.3"
   },
   "devDependencies": {
-    "@types/react": "^18.2.43",
+    "@types/html2canvas": "^1.0.0",
+    "@types/react": "^18.3.23",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",

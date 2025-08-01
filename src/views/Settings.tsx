@@ -1,35 +1,138 @@
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Settings() {
-  const [email, setEmail] = useState('');
+  const { user, signOut } = useAuth();
+  const [email, setEmail] = useState(user?.email || '');
   const [smsEnabled, setSmsEnabled] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleSaveSettings = async () => {
+    setLoading(true);
+    setMessage('');
+    
+    // Simulate saving settings
+    setTimeout(() => {
+      setMessage('Settings saved successfully!');
+      setLoading(false);
+    }, 1000);
+  };
+
+  const handleSignOut = async () => {
+    setLoading(true);
+    const result = await signOut();
+    if (result.error) {
+      setMessage('Error signing out: ' + result.error);
+    }
+    setLoading(false);
+  };
 
   return (
     <main className="p-6 flex-1 bg-white">
-      <h1 className="text-2xl font-bold mb-4">Settings</h1>
+      <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Email</label>
-        <input
-          type="email"
-          className="border px-3 py-2 rounded w-full"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="you@example.com"
-        />
+      {/* User Profile Section */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">Account Information</h2>
+        <div className="flex items-center space-x-4 mb-4">
+          {user?.photoURL ? (
+            <img 
+              src={user.photoURL} 
+              alt="Profile" 
+              className="w-16 h-16 rounded-full"
+            />
+          ) : (
+            <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-semibold">
+              {user?.email?.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <p className="font-medium text-gray-900">
+              {user?.displayName || 'User'}
+            </p>
+            <p className="text-sm text-gray-600">{user?.email}</p>
+            <p className="text-xs text-gray-500">
+              Provider: {user?.providerData[0]?.providerId || 'Email/Password'}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
-        <label className="text-sm font-medium">Enable SMS Alerts</label>
-        <input
-          type="checkbox"
-          checked={smsEnabled}
-          onChange={() => setSmsEnabled(!smsEnabled)}
-          className="form-checkbox h-5 w-5 text-accent"
-        />
+      {/* Notification Settings */}
+      <div className="bg-white border rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">Notification Settings</h2>
+        
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Email Address</label>
+          <input
+            type="email"
+            className="border px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <label className="text-sm font-medium">Email Notifications</label>
+            <p className="text-xs text-gray-500">Receive price drop alerts via email</p>
+          </div>
+          <input
+            type="checkbox"
+            defaultChecked
+            className="form-checkbox h-5 w-5 text-blue-600"
+          />
+        </div>
+
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <label className="text-sm font-medium">SMS Alerts</label>
+            <p className="text-xs text-gray-500">Receive price drop alerts via SMS</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={smsEnabled}
+            onChange={() => setSmsEnabled(!smsEnabled)}
+            className="form-checkbox h-5 w-5 text-blue-600"
+          />
+        </div>
       </div>
 
-      <button className="bg-accent text-white px-4 py-2 rounded hover:bg-pink-600">Save Settings</button>
+      {/* Account Actions */}
+      <div className="bg-white border rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">Account Actions</h2>
+        
+        <div className="space-y-3">
+          <button
+            onClick={handleSaveSettings}
+            disabled={loading}
+            className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? 'Saving...' : 'Save Settings'}
+          </button>
+          
+          <button
+            onClick={handleSignOut}
+            disabled={loading}
+            className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      {/* Status Message */}
+      {message && (
+        <div className={`p-3 rounded ${
+          message.includes('Error') 
+            ? 'bg-red-100 text-red-700 border border-red-400' 
+            : 'bg-green-100 text-green-700 border border-green-400'
+        }`}>
+          {message}
+        </div>
+      )}
     </main>
   );
 }
