@@ -8,43 +8,44 @@ const MOCK_ALERT_PREFERENCES_KEY = 'mockAlertPreferences';
 export class MockAlertService {
   // Generate fake alerts for testing
   static generateMockAlerts(): Alert[] {
-    const mockProducts = [
-      {
-        id: 'laptop-1',
-        name: 'MacBook Pro 14" M3',
-        url: 'https://amazon.com/macbook-pro',
-        image: `${import.meta.env.BASE_URL}img/laptop.png`,
-        currentPrice: 1499.99,
-      },
-      {
-        id: 'headphones-1',
-        name: 'Sony WH-1000XM5 Wireless Headphones',
-        url: 'https://amazon.com/sony-headphones',
-        image: `${import.meta.env.BASE_URL}img/headphones.png`,
-        currentPrice: 349.99,
-      },
-      {
-        id: 'sofa-1',
-        name: 'Modern L-Shaped Sectional Sofa',
-        url: 'https://amazon.com/sectional-sofa',
-        image: `${import.meta.env.BASE_URL}img/sofa.png`,
-        currentPrice: 899.99,
-      },
-      {
-        id: 'watch-1',
-        name: 'Apple Watch Series 9',
-        url: 'https://amazon.com/apple-watch',
-        image: `${import.meta.env.BASE_URL}img/watch.png`,
-        currentPrice: 399.99,
-      },
-      {
-        id: 'mixer-1',
-        name: 'KitchenAid Stand Mixer Professional',
-        url: 'https://amazon.com/kitchenaid-mixer',
-        image: `${import.meta.env.BASE_URL}img/mixer.png`,
-        currentPrice: 449.99,
-      },
-    ];
+    // Mock products array commented out to fix linting errors
+    // const mockProducts = [
+    //   {
+    //     id: 'laptop-1',
+    //     name: 'MacBook Pro 14" M3',
+    //     url: 'https://amazon.com/macbook-pro',
+    //     image: `${import.meta.env.BASE_URL}img/laptop.png`,
+    //     currentPrice: 1499.99,
+    //   },
+    //   {
+    //     id: 'headphones-1',
+    //     name: 'Sony WH-1000XM5 Wireless Headphones',
+    //     url: 'https://amazon.com/sony-headphones',
+    //     image: `${import.meta.env.BASE_URL}img/headphones.png`,
+    //     currentPrice: 349.99,
+    //   },
+    //   {
+    //     id: 'sofa-1',
+    //     name: 'Modern L-Shaped Sectional Sofa',
+    //     url: 'https://amazon.com/sectional-sofa',
+    //     image: `${import.meta.env.BASE_URL}img/sofa.png`,
+    //     currentPrice: 899.99,
+    //   },
+    //   {
+    //     id: 'watch-1',
+    //     name: 'Apple Watch Series 9',
+    //     url: 'https://amazon.com/apple-watch',
+    //     image: `${import.meta.env.BASE_URL}img/watch.png`,
+    //     currentPrice: 399.99,
+    //   },
+    //   {
+    //     id: 'mixer-1',
+    //     name: 'KitchenAid Stand Mixer Professional',
+    //     url: 'https://amazon.com/kitchenaid-mixer',
+    //     image: `${import.meta.env.BASE_URL}img/mixer.png`,
+    //     currentPrice: 449.99,
+    //   },
+    // ];
 
     const mockAlerts: Alert[] = [
       {

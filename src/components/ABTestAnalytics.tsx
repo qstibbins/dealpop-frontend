@@ -64,8 +64,8 @@ class ABTestAnalytics {
   getAnalytics() {
     const views = this.events.filter(e => e.event === 'view');
     const signups = this.events.filter(e => e.event === 'signup');
-    const googleSignups = this.events.filter(e => e.event === 'google_signup');
-    const logins = this.events.filter(e => e.event === 'login');
+    // const googleSignups = this.events.filter(e => e.event === 'google_signup');
+    // const logins = this.events.filter(e => e.event === 'login');
 
     const originalViews = views.filter(e => e.variant === 'original').length;
     const v2Views = views.filter(e => e.variant === 'v2').length;

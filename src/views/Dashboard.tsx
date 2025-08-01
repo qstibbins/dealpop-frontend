@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import ProductCard from '../components/ProductCard';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
 import { ChromeStorageService } from '../services/chromeStorage';
+import { SearchService } from '../services/searchService';
+import SearchFiltersComponent from '../components/SearchFilters';
+import SearchResults from '../components/SearchResults';
+import { useSearch } from '../hooks/useSearch';
 
 interface Product {
   id: string;
@@ -19,6 +21,7 @@ interface Product {
 export default function Dashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { filters, debouncedFilters, updateFilters } = useSearch(SearchService.getDefaultFilters());
   const [stats, setStats] = useState({
     totalProducts: 0,
     trackingProducts: 0,
@@ -137,15 +140,26 @@ export default function Dashboard() {
     });
   }, []);
 
-  if (loading) {
-    return (
-      <main className="p-6 flex-1 bg-white">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-gray-600">Loading your products...</div>
-        </div>
-      </main>
-    );
-  }
+  // Filter products based on search criteria
+  const filteredProducts = useMemo(() => {
+    // Convert Product[] to ExtractedProduct[] for the search service
+    const extractedProducts = products.map(product => ({
+      id: product.id,
+      product_name: product.title,
+      price: product.price,
+      vendor: product.vendor,
+      targetPrice: product.targetPrice,
+      expiresIn: product.expiresIn,
+      status: product.status,
+      url: product.url,
+      extractedAt: product.extractedAt,
+      brand: '', // Add default values for missing fields
+      color: '',
+      capacity: '',
+    }));
+
+    return SearchService.filterProducts(extractedProducts, debouncedFilters);
+  }, [products, debouncedFilters]);
 
   return (
     <main className="p-6 flex-1 bg-white">
@@ -172,50 +186,47 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-4">
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="border px-3 py-1 rounded focus:outline-none w-64"
-          />
-          <div className="text-sm text-gray-600">
-            {products.length} products tracked
-          </div>
-        </div>
+        {/* Search and Filters */}
+        <SearchFiltersComponent
+          filters={filters}
+          onFiltersChange={updateFilters}
+          products={products.map(product => ({
+            id: product.id,
+            product_name: product.title,
+            price: product.price,
+            vendor: product.vendor,
+            targetPrice: product.targetPrice,
+            expiresIn: product.expiresIn,
+            status: product.status,
+            url: product.url,
+            extractedAt: product.extractedAt,
+            brand: '',
+            color: '',
+            capacity: '',
+          }))}
+          className="mb-6"
+        />
       </div>
 
-      <div className="mb-4 space-x-2">
-        {['All', 'Tracking', 'Paused', 'Completed'].map(tag => (
-          <button key={tag} className="px-3 py-1 rounded-full bg-pink-100 text-sm hover:bg-pink-200">
-            {tag}
-          </button>
-        ))}
-      </div>
-
-      {products.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
-          <p className="text-gray-500 mb-4">
-            Use the Chrome extension to extract products from shopping websites.
-          </p>
-          <div className="text-sm text-gray-400">
-            Products you extract will appear here automatically.
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
-            <Link key={product.id} to={`/product/${product.id}`} className="block">
-              <ProductCard {...product} />
-            </Link>
-          ))}
-        </div>
-      )}
+      {/* Search Results */}
+      <SearchResults
+        products={products.map(product => ({
+          id: product.id,
+          product_name: product.title,
+          price: product.price,
+          vendor: product.vendor,
+          targetPrice: product.targetPrice,
+          expiresIn: product.expiresIn,
+          status: product.status,
+          url: product.url,
+          extractedAt: product.extractedAt,
+          brand: '',
+          color: '',
+          capacity: '',
+        }))}
+        filteredProducts={filteredProducts}
+        loading={loading}
+      />
     </main>
   );
 }

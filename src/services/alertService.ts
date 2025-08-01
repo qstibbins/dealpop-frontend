@@ -10,8 +10,8 @@ import {
   query, 
   where, 
   orderBy, 
-  limit,
-  Timestamp,
+  // limit,
+  // Timestamp,
   onSnapshot
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
@@ -180,7 +180,7 @@ export class AlertService {
   }
 
   // Simulate price check (in real implementation, this would call external APIs)
-  static async checkProductPrice(productUrl: string): Promise<PriceCheckResult> {
+  static async checkProductPrice(_productUrl: string): Promise<PriceCheckResult> {
     // This is a mock implementation
     // In a real app, you'd integrate with price tracking APIs
     const mockPrice = Math.random() * 1000 + 100;

@@ -5,7 +5,7 @@ import ProtectedRoute from './auth/ProtectedRoute';
 import Sidebar from './layout/Sidebar';
 import Dashboard from './views/Dashboard';
 import ProductDetail from './views/ProductDetail';
-import Login from './views/Login';
+// import Login from './views/Login';
 import LoginV2 from './views/LoginV2';
 import ABTestLogin from './components/ABTestLogin';
 import ABTestDashboard from './components/ABTestDashboard';

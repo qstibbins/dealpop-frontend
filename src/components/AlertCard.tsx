@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Alert } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
 import ConfirmDialog from './ui/ConfirmDialog';
@@ -9,7 +9,7 @@ interface AlertCardProps {
 }
 
 export default function AlertCard({ alert, onEdit }: AlertCardProps) {
-  const { updateAlert, deleteAlert, dismissAlert } = useAlerts();
+  const { deleteAlert, dismissAlert } = useAlerts();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
