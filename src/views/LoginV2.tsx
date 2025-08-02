@@ -67,7 +67,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FF0DAF] via-[#F7D0ED] to-[#FF0DAF] px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FF0DAF] via-[#F7D0ED] to-[#FF0DAF] px-4 py-4 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
@@ -75,10 +75,10 @@ export default function Login() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#27AE60]/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 max-w-md w-full relative z-10 border border-white/20">
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 max-w-md w-full relative z-10 border border-white/20 mx-2 my-4 md:mx-4 md:my-6">
         {/* Logo and Brand Section */}
-        <div className="text-center mb-8">
-          <div className="mb-4">
+        <div className="text-center mb-4">
+          <div className="mb-2">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#FF0DAF] to-[#2F80ED] bg-clip-text text-transparent mb-2">
               DealPop
             </h1>
@@ -86,7 +86,7 @@ export default function Login() {
               NAME IT, CLAIM IT
             </p>
           </div>
-          <div className="mb-6">
+          <div className="mb-3">
             <p className="text-lg font-semibold text-[#1D1D1D] mb-1">
               Wish it. Watch it. Snag it.
             </p>
@@ -97,7 +97,7 @@ export default function Login() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center">
             <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
@@ -106,7 +106,7 @@ export default function Login() {
         )}
 
         {/* Social Login Button */}
-        <div className="mb-6">
+        <div className="mb-4">
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
@@ -122,7 +122,7 @@ export default function Login() {
           </button>
         </div>
 
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-[#E0E0E0]" />
           </div>
@@ -132,7 +132,7 @@ export default function Login() {
         </div>
 
         {/* Email/Password Form */}
-        <form onSubmit={handleEmailAuth} className="space-y-5">
+        <form onSubmit={handleEmailAuth} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-semibold text-[#333333] mb-2">
               Email address
@@ -215,7 +215,7 @@ export default function Login() {
         </div>
 
         {/* Brand Purpose */}
-        <div className="mt-8 pt-6 border-t border-[#E0E0E0]">
+        <div className="mt-6 pt-4 border-t border-[#E0E0E0]">
           <div className="text-center">
             <p className="text-xs text-[#828282] leading-relaxed">
               To help mindful shoppers save time and money by tracking product prices, organizing wishlists, and getting notified when the deal is just right.

@@ -1,24 +1,68 @@
 import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './auth/ProtectedRoute';
 import Sidebar from './layout/Sidebar';
 import Dashboard from './views/Dashboard';
 import ProductDetail from './views/ProductDetail';
 import Login from './views/Login';
+import LoginV2 from './views/LoginV2';
+import ABTestLogin from './components/ABTestLogin';
+import ABTestDashboard from './components/ABTestDashboard';
 import Alerts from './views/Alerts';
 import Settings from './views/Settings';
 import './styles/theme.css'
 
 function App() {
   return (
-    <div className="flex">
-      <Sidebar />
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/alerts" element={<Alerts />} />
-        <Route path="/settings" element={<Settings />} />
-      </Routes>
-    </div>
+    <AuthProvider>
+      <div className="flex">
+        <Routes>
+          <Route path="/login" element={<ABTestLogin />} />
+          <Route path="/login-v2" element={<LoginV2 />} />
+          <Route path="/ab-test-analytics" element={<ABTestDashboard />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <>
+                <Sidebar />
+                <Dashboard />
+              </>
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <>
+                <Sidebar />
+                <Dashboard />
+              </>
+            </ProtectedRoute>
+          } />
+          <Route path="/product/:id" element={
+            <ProtectedRoute>
+              <>
+                <Sidebar />
+                <ProductDetail />
+              </>
+            </ProtectedRoute>
+          } />
+          <Route path="/alerts" element={
+            <ProtectedRoute>
+              <>
+                <Sidebar />
+                <Alerts />
+              </>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <>
+                <Sidebar />
+                <Settings />
+              </>
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </div>
+    </AuthProvider>
   )
 }
 

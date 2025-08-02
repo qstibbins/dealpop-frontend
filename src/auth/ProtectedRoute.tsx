@@ -1,15 +1,23 @@
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 
-const enableAuth = import.meta.env.VITE_ENABLE_AUTH === 'true';
-
 export default function ProtectedRoute({ children }: { children: JSX.Element }) {
-  if (!enableAuth) return children;
+  const { user, loading } = useAuth();
 
-  const { isAuthenticated, isLoading } = useAuth0();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
 
   return children;
 }
