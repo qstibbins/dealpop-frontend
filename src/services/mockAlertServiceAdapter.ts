@@ -109,7 +109,7 @@ export class MockAlertServiceAdapter {
   }
 
   // Simulate price check
-  static async checkProductPrice(productUrl: string): Promise<PriceCheckResult> {
+  static async checkProductPrice(_productUrl: string): Promise<PriceCheckResult> {
     // This is a mock implementation
     const mockPrice = Math.random() * 1000 + 100;
     const mockPreviousPrice = mockPrice + (Math.random() * 50 - 25);

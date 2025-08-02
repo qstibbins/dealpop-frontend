@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAlerts } from '../contexts/AlertContext';
 import AlertCard from '../components/AlertCard';
 import CreateAlertModal from '../components/CreateAlertModal';
@@ -9,17 +9,14 @@ import { MockAlertService } from '../services/mockAlertService';
 export default function Alerts() {
   const { 
     alerts, 
-    activeAlerts, 
     loading, 
     error, 
-    getAlertStats,
-    updatePreferences,
-    alertPreferences 
+    getAlertStats
   } = useAlerts();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [showPreferencesModal, setShowPreferencesModal] = useState(false);
+  // const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'triggered' | 'dismissed'>('all');
 
@@ -35,10 +32,10 @@ export default function Alerts() {
     setShowCreateModal(true);
   };
 
-  const handleViewHistory = (alert: Alert) => {
-    setSelectedAlert(alert);
-    setShowHistoryModal(true);
-  };
+  // const handleViewHistory = (alert: Alert) => {
+  //   setSelectedAlert(alert);
+  //   setShowHistoryModal(true);
+  // };
 
   const handleResetMockData = () => {
     MockAlertService.clearMockData();

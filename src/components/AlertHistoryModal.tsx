@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertHistory } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
 import Modal from './ui/Modal';
