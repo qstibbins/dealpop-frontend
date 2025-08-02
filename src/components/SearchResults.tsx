@@ -1,20 +1,24 @@
 import { ExtractedProduct } from '../services/chromeStorage';
 import ProductCard from './ProductCard';
-import { Link } from 'react-router-dom';
 
 interface SearchResultsProps {
   products: ExtractedProduct[];
   filteredProducts: ExtractedProduct[];
   loading: boolean;
   className?: string;
+  onEdit?: (product: any) => void;
+  onDelete?: (id: string) => void;
 }
 
 export default function SearchResults({ 
   products, 
   filteredProducts, 
   loading, 
-  className = '' 
+  className = '',
+  onEdit,
+  onDelete,
 }: SearchResultsProps) {
+
   if (loading) {
     return (
       <div className={`${className}`}>
@@ -85,8 +89,9 @@ export default function SearchResults({
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map((product) => (
-          <Link key={product.id} to={`/product/${product.id}`} className="block">
+          <div key={product.id}>
             <ProductCard
+              id={product.id}
               imageUrl={`${import.meta.env.BASE_URL}img/laptop.png`} // Default image
               title={product.product_name}
               price={product.price}
@@ -96,8 +101,10 @@ export default function SearchResults({
               status={product.status}
               url={product.url}
               extractedAt={product.extractedAt}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
-          </Link>
+          </div>
         ))}
       </div>
     </div>

@@ -5,6 +5,7 @@ import { ImageService } from '../services/imageService';
 import SearchFiltersComponent from '../components/SearchFilters';
 import SearchResults from '../components/SearchResults';
 import { useSearch } from '../hooks/useSearch';
+import { useNavigate } from 'react-router-dom';
 
 interface Product {
   id: string;
@@ -29,6 +30,7 @@ export default function Dashboard() {
     completedProducts: 0,
     totalSavings: 0,
   });
+  const navigate = useNavigate();
 
   // Dummy products fallback
   const dummyProducts: Product[] = [
@@ -165,6 +167,33 @@ export default function Dashboard() {
     return SearchService.filterProducts(extractedProducts, debouncedFilters);
   }, [products, debouncedFilters]);
 
+  const handleEditProduct = (product: any) => {
+    navigate(`/product/${product.id}`);
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      await ChromeStorageService.deleteProduct(id);
+      // Refresh the products list
+      const updatedProducts = await ChromeStorageService.getProducts();
+      const convertedProducts = updatedProducts.map(product => ({
+        id: product.id,
+        imageUrl: product.imageUrl || ImageService.getFallbackImage(product.product_name),
+        title: product.product_name,
+        price: product.price,
+        vendor: product.vendor || 'Unknown',
+        targetPrice: product.targetPrice,
+        expiresIn: product.expiresIn,
+        status: product.status,
+        url: product.url,
+        extractedAt: product.extractedAt,
+      }));
+      setProducts(convertedProducts);
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+    }
+  };
+
   return (
     <main className="p-6 flex-1 bg-white">
       <div className="mb-6">
@@ -230,6 +259,8 @@ export default function Dashboard() {
         }))}
         filteredProducts={filteredProducts}
         loading={loading}
+        onEdit={handleEditProduct}
+        onDelete={handleDeleteProduct}
       />
     </main>
   );
