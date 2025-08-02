@@ -19,7 +19,7 @@ export function useImage(
   productName: string, 
   options: UseImageOptions = {}
 ): UseImageReturn {
-  const { fallbackImage, optimize = true, preload = false } = options;
+  const { fallbackImage } = options;
   
   const [imageState, setImageState] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [currentImageUrl, setCurrentImageUrl] = useState(() => {

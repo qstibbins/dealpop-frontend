@@ -1,6 +1,5 @@
 import React from 'react';
 import { useImage } from '../hooks/useImage';
-import { ImageService } from '../services/imageService';
 
 const ImageTest: React.FC = () => {
   const testCases = [
