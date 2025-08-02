@@ -8,7 +8,7 @@ export interface SearchFilters {
     min: number;
     max: number;
   };
-  sortBy: 'name' | 'price' | 'date' | 'vendor';
+  sortBy: 'name' | 'price' | 'vendor';
   sortOrder: 'asc' | 'desc';
 }
 
@@ -78,10 +78,7 @@ export class SearchService {
           aValue = parseFloat(a.price.replace(/[^0-9.]/g, ''));
           bValue = parseFloat(b.price.replace(/[^0-9.]/g, ''));
           break;
-        case 'date':
-          aValue = new Date(a.extractedAt).getTime();
-          bValue = new Date(b.extractedAt).getTime();
-          break;
+
         case 'vendor':
           aValue = (a.vendor || '').toLowerCase();
           bValue = (b.vendor || '').toLowerCase();
@@ -140,7 +137,7 @@ export class SearchService {
       status: 'all',
       vendor: '',
       priceRange: { min: 0, max: Infinity },
-      sortBy: 'date',
+      sortBy: 'name',
       sortOrder: 'desc'
     };
   }

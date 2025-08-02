@@ -47,10 +47,7 @@ export default function ProductCard({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
+
 
   const handleCreateAlert = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,9 +81,9 @@ export default function ProductCard({
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
-          {extractedAt && (
-            <span className="text-xs text-gray-500">
-              {formatDate(extractedAt)}
+          {expiresIn && (
+            <span className="text-xs text-gray-500 font-medium">
+              Tracker ends in {expiresIn}
             </span>
           )}
         </div>
@@ -150,12 +147,6 @@ export default function ProductCard({
             </div>
           )}
         </div>
-        
-        {expiresIn && (
-          <p className="text-xs text-gray-400 mb-2">
-            Tracker ends in {expiresIn}
-          </p>
-        )}
 
         {/* Create Alert and View Product Buttons */}
         <div className="flex space-x-2 relative z-20">
