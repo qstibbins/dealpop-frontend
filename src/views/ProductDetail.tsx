@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ChromeStorageService } from '../services/chromeStorage';
+import { ImageService } from '../services/imageService';
 
 interface Product {
   id: string;
@@ -40,7 +41,7 @@ export default function ProductDetail() {
         if (foundProduct) {
           const convertedProduct: Product = {
             id: foundProduct.id,
-            imageUrl: `${import.meta.env.BASE_URL}img/laptop.png`,
+            imageUrl: foundProduct.imageUrl || ImageService.getFallbackImage(foundProduct.product_name), // Use extracted image or fallback
             title: foundProduct.product_name,
             price: foundProduct.price,
             vendor: foundProduct.vendor || 'Unknown',
@@ -51,7 +52,6 @@ export default function ProductDetail() {
             extractedAt: foundProduct.extractedAt,
             color: foundProduct.color,
             brand: foundProduct.brand,
-            capacity: foundProduct.capacity,
           };
           
           setProduct(convertedProduct);
@@ -59,16 +59,21 @@ export default function ProductDetail() {
             targetPrice: foundProduct.targetPrice || '',
             status: foundProduct.status,
           });
+        } else {
+          navigate('/dashboard');
         }
       } catch (error) {
         console.error('Failed to load product:', error);
+        navigate('/dashboard');
       } finally {
         setLoading(false);
       }
     };
 
     loadProduct();
-  }, [id]);
+  }, [id, navigate]);
+
+
 
   const handleSave = async () => {
     if (!product) return;

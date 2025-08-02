@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ChromeStorageService } from '../services/chromeStorage';
 import { SearchService } from '../services/searchService';
+import { ImageService } from '../services/imageService';
 import SearchFiltersComponent from '../components/SearchFilters';
 import SearchResults from '../components/SearchResults';
 import { useSearch } from '../hooks/useSearch';
@@ -33,7 +34,7 @@ export default function Dashboard() {
   const dummyProducts: Product[] = [
     {
       id: '1',
-      imageUrl: `${import.meta.env.BASE_URL}img/laptop.png`,
+      imageUrl: '/img/laptop.png',
       title: 'Sample Laptop',
       price: '999.99',
       vendor: 'TechStore',
@@ -45,7 +46,7 @@ export default function Dashboard() {
     },
     {
       id: '2',
-      imageUrl: `${import.meta.env.BASE_URL}img/headphones.png`,
+      imageUrl: '/img/headphones.png',
       title: 'Wireless Headphones',
       price: '199.99',
       vendor: 'AudioShop',
@@ -57,7 +58,7 @@ export default function Dashboard() {
     },
     {
       id: '3',
-      imageUrl: `${import.meta.env.BASE_URL}img/sofa.png`,
+      imageUrl: '/img/sofa.png',
       title: 'Modern Sofa',
       price: '499.99',
       vendor: 'HomeStore',
@@ -76,18 +77,27 @@ export default function Dashboard() {
         const extractedProducts = await ChromeStorageService.getProducts();
         let convertedProducts: Product[] = extractedProducts.map(product => ({
           id: product.id,
-          imageUrl: `${import.meta.env.BASE_URL}img/laptop.png`, // Default image
+          imageUrl: product.imageUrl || ImageService.getFallbackImage(product.product_name), // Use extracted image or fallback
           title: product.product_name,
           price: product.price,
           vendor: product.vendor || 'Unknown',
           targetPrice: product.targetPrice,
           expiresIn: product.expiresIn,
-          status: product.status,
+          status: product.status || 'tracking',
           url: product.url,
           extractedAt: product.extractedAt,
         }));
+        
+        // Log the converted products for debugging
+        console.log('Converted products:', convertedProducts.map(p => ({
+          title: p.title,
+          imageUrl: p.imageUrl,
+          hasImageUrl: !!p.imageUrl
+        })));
+        
         // Fallback to dummyProducts if Chrome extension API is unavailable or no products
         if (!window.chrome || !window.chrome.storage || convertedProducts.length === 0) {
+          console.log('Using dummy products as fallback');
           convertedProducts = dummyProducts;
         }
         setProducts(convertedProducts);
@@ -125,7 +135,7 @@ export default function Dashboard() {
     ChromeStorageService.onStorageChange((extractedProducts) => {
       const convertedProducts: Product[] = extractedProducts.map(product => ({
         id: product.id,
-        imageUrl: `${import.meta.env.BASE_URL}img/laptop.png`,
+        imageUrl: product.imageUrl || ImageService.getFallbackImage(product.product_name), // Use extracted image or fallback
         title: product.product_name,
         price: product.price,
         vendor: product.vendor || 'Unknown',
@@ -139,6 +149,8 @@ export default function Dashboard() {
       setProducts(convertedProducts);
     });
   }, []);
+
+
 
   // Filter products based on search criteria
   const filteredProducts = useMemo(() => {

@@ -24,6 +24,7 @@ export interface ExtractedProduct {
   capacity?: string;
   vendor?: string;
   url: string;
+  imageUrl?: string; // Add image URL field
   extractedAt: string;
   targetPrice?: string;
   expiresIn?: string;
@@ -50,6 +51,15 @@ export class ChromeStorageService {
     return new Promise((resolve) => {
       window.chrome.storage.sync.get(['extractedProducts'], (result: { extractedProducts?: ExtractedProduct[] }) => {
         const products = result.extractedProducts || [];
+        console.log('Loaded products from Chrome storage:', products.length, 'products');
+        
+        // Log any products with missing image URLs
+        products.forEach(product => {
+          if (!product.imageUrl) {
+            console.warn(`Product "${product.product_name}" has no imageUrl, will use fallback`);
+          }
+        });
+        
         resolve(products);
       });
     });
