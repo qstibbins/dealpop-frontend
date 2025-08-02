@@ -1,0 +1,12 @@
+/* Global styles for consistent background */
+html, body {
+  background-color: #E8F4FD;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+#root {
+  background-color: #E8F4FD;
+  min-height: 100vh;
+}

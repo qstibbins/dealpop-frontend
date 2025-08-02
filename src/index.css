@@ -3,8 +3,11 @@
 @tailwind utilities;
 
 /* Custom styles */
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  background-color: #E8F4FD;
+  min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
