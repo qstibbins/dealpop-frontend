@@ -34,7 +34,7 @@ export default function Dashboard() {
   const dummyProducts: Product[] = [
     {
       id: '1',
-      imageUrl: '/img/laptop.png',
+      imageUrl: ImageService.getFallbackImage('Sample Laptop'),
       title: 'Sample Laptop',
       price: '999.99',
       vendor: 'TechStore',
@@ -46,7 +46,7 @@ export default function Dashboard() {
     },
     {
       id: '2',
-      imageUrl: '/img/headphones.png',
+      imageUrl: ImageService.getFallbackImage('Wireless Headphones'),
       title: 'Wireless Headphones',
       price: '199.99',
       vendor: 'AudioShop',
@@ -58,7 +58,7 @@ export default function Dashboard() {
     },
     {
       id: '3',
-      imageUrl: '/img/sofa.png',
+      imageUrl: ImageService.getFallbackImage('Modern Sofa'),
       title: 'Modern Sofa',
       price: '499.99',
       vendor: 'HomeStore',
@@ -88,16 +88,8 @@ export default function Dashboard() {
           extractedAt: product.extractedAt,
         }));
         
-        // Log the converted products for debugging
-        console.log('Converted products:', convertedProducts.map(p => ({
-          title: p.title,
-          imageUrl: p.imageUrl,
-          hasImageUrl: !!p.imageUrl
-        })));
-        
         // Fallback to dummyProducts if Chrome extension API is unavailable or no products
         if (!window.chrome || !window.chrome.storage || convertedProducts.length === 0) {
-          console.log('Using dummy products as fallback');
           convertedProducts = dummyProducts;
         }
         setProducts(convertedProducts);

@@ -1,5 +1,4 @@
 import { useImage } from '../hooks/useImage';
-import { useEffect } from 'react';
 
 type ProductCardProps = {
   imageUrl: string;
@@ -24,26 +23,10 @@ export default function ProductCard({
   url,
   extractedAt,
 }: ProductCardProps) {
-  // Temporarily simplify to test basic image loading
-  console.log(`ProductCard rendering for "${title}" with imageUrl: "${imageUrl}"`);
-  
-  const { imageState, currentImageUrl, retry, error } = useImage(imageUrl, title, {
+  const { imageState, currentImageUrl, retry } = useImage(imageUrl, title, {
     optimize: true,
     preload: false,
   });
-
-  // Debug logging for image loading issues
-  useEffect(() => {
-    if (imageState === 'error') {
-      console.warn(`Image failed to load for "${title}":`, {
-        originalUrl: imageUrl,
-        currentUrl: currentImageUrl,
-        error
-      });
-    } else if (imageState === 'loaded') {
-      console.log(`Image loaded successfully for "${title}":`, currentImageUrl);
-    }
-  }, [imageState, imageUrl, currentImageUrl, error, title]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -108,8 +91,6 @@ export default function ProductCard({
             imageState === 'loaded' ? 'opacity-100' : 'opacity-0'
           }`}
           loading="lazy"
-          onLoad={() => console.log(`Main image loaded for "${title}":`, currentImageUrl)}
-          onError={() => console.error(`Main image failed for "${title}":`, currentImageUrl)}
         />
       </div>
       

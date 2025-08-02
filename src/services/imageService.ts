@@ -43,8 +43,11 @@ export class ImageService {
       fallbackPath = this.FALLBACK_IMAGES.laptop;
     }
     
-    console.log(`Fallback image for "${productName}": "${fallbackPath}"`);
-    return fallbackPath;
+    // Construct full URL with base URL
+    const baseUrl = import.meta.env.BASE_URL || '/';
+    const fullUrl = `${baseUrl}${fallbackPath}`;
+    
+    return fullUrl;
   }
 
   /**
@@ -125,10 +128,7 @@ export class ImageService {
    * Get optimized image URL for product cards
    */
   static getProductCardImage(imageUrl: string, productName: string): string {
-    console.log(`getProductCardImage called for "${productName}" with URL: "${imageUrl}"`);
-    
     if (!this.isValidImageUrl(imageUrl)) {
-      console.log(`Invalid URL for "${productName}", using fallback`);
       return this.getFallbackImage(productName);
     }
 
@@ -139,7 +139,6 @@ export class ImageService {
       format: 'webp'
     });
     
-    console.log(`Optimized URL for "${productName}": "${optimizedUrl}"`);
     return optimizedUrl;
   }
 
