@@ -48,7 +48,7 @@ export default function SearchFilters({
       status: 'all',
       vendor: '',
       priceRange: { min: 0, max: Infinity },
-      sortBy: 'name',
+      sortBy: 'smart',
       sortOrder: 'desc'
     });
   };
@@ -197,6 +197,7 @@ export default function SearchFilters({
                 onChange={(e) => handleFilterChange('sortBy', e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
+                <option value="smart">Smart (Deals First)</option>
                 <option value="name">Product Name</option>
                 <option value="price">Price</option>
                 <option value="vendor">Vendor</option>

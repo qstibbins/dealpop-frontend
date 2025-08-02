@@ -8,7 +8,7 @@ export interface SearchFilters {
     min: number;
     max: number;
   };
-  sortBy: 'name' | 'price' | 'vendor';
+  sortBy: 'name' | 'price' | 'vendor' | 'smart';
   sortOrder: 'asc' | 'desc';
 }
 
@@ -52,9 +52,65 @@ export class SearchService {
     }
 
     // Sort products
-    filtered = this.sortProducts(filtered, filters.sortBy, filters.sortOrder);
+    if (filters.sortBy === 'smart') {
+      filtered = this.smartSortProducts(filtered);
+    } else {
+      filtered = this.sortProducts(filtered, filters.sortBy, filters.sortOrder);
+    }
 
     return filtered;
+  }
+
+  /**
+   * Smart sorting that prioritizes deals ready for purchase first, then by expiration date
+   */
+  private static smartSortProducts(products: ExtractedProduct[]): ExtractedProduct[] {
+    return [...products].sort((a, b) => {
+      // Helper function to check if a product is a deal (current price <= target price)
+      const isDeal = (product: ExtractedProduct): boolean => {
+        if (!product.targetPrice) return false;
+        const currentPrice = parseFloat(product.price.replace(/[^0-9.]/g, ''));
+        const targetPrice = parseFloat(product.targetPrice.replace(/[^0-9.]/g, ''));
+        return currentPrice <= targetPrice;
+      };
+
+      // Helper function to extract days from expiresIn string
+      const getExpirationDays = (expiresIn: string | undefined): number => {
+        if (!expiresIn) return Infinity;
+        const match = expiresIn.match(/(\d+)\s*days?/i);
+        return match ? parseInt(match[1]) : Infinity;
+      };
+
+      const aIsDeal = isDeal(a);
+      const bIsDeal = isDeal(b);
+
+      // First priority: Deals come before non-deals
+      if (aIsDeal && !bIsDeal) return -1;
+      if (!aIsDeal && bIsDeal) return 1;
+
+      // Second priority: Among deals, sort by expiration date (earliest first)
+      if (aIsDeal && bIsDeal) {
+        const aExpirationDays = getExpirationDays(a.expiresIn);
+        const bExpirationDays = getExpirationDays(b.expiresIn);
+        
+        if (aExpirationDays !== bExpirationDays) {
+          return aExpirationDays - bExpirationDays;
+        }
+      }
+
+      // Third priority: Among non-deals, sort by expiration date (earliest first)
+      if (!aIsDeal && !bIsDeal) {
+        const aExpirationDays = getExpirationDays(a.expiresIn);
+        const bExpirationDays = getExpirationDays(b.expiresIn);
+        
+        if (aExpirationDays !== bExpirationDays) {
+          return aExpirationDays - bExpirationDays;
+        }
+      }
+
+      // Fourth priority: If expiration dates are the same, sort by name
+      return a.product_name.toLowerCase().localeCompare(b.product_name.toLowerCase());
+    });
   }
 
   /**
@@ -137,8 +193,16 @@ export class SearchService {
       status: 'all',
       vendor: '',
       priceRange: { min: 0, max: Infinity },
-      sortBy: 'name',
+      sortBy: 'smart',
       sortOrder: 'desc'
     };
+  }
+
+  /**
+   * Test function to verify smart sorting functionality
+   * This can be used for debugging and testing
+   */
+  static testSmartSorting(products: ExtractedProduct[]): ExtractedProduct[] {
+    return this.smartSortProducts(products);
   }
 } 

@@ -8,6 +8,7 @@ interface SearchResultsProps {
   className?: string;
   onCreateAlert?: (product: any) => void;
   onViewProduct?: (url: string) => void;
+  isSmartSortingActive?: boolean;
 }
 
 export default function SearchResults({ 
@@ -17,6 +18,7 @@ export default function SearchResults({
   className = '',
   onCreateAlert,
   onViewProduct,
+  isSmartSortingActive = false,
 }: SearchResultsProps) {
 
   if (loading) {
@@ -75,8 +77,17 @@ export default function SearchResults({
     <div className={`${className}`}>
       {/* Results Header */}
       <div className="flex justify-between items-center mb-6">
-        <div className="text-sm text-gray-600">
-          Showing {filteredProducts.length} of {products.length} products
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-gray-600">
+            Showing {filteredProducts.length} of {products.length} products
+          </div>
+          
+          {isSmartSortingActive && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
+              <span>🎯</span>
+              <span>Smart Sort Active</span>
+            </div>
+          )}
         </div>
         
         {filteredProducts.length > 0 && (

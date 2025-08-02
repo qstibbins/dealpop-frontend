@@ -226,6 +226,9 @@ export default function Dashboard() {
     return SearchService.filterProducts(extractedProducts, debouncedFilters);
   }, [products, debouncedFilters, filter, alerts]); // Add alerts to dependencies
 
+  // Check if smart sorting is active
+  const isSmartSortingActive = debouncedFilters.sortBy === 'smart';
+
   const handleCreateAlert = (product: any) => {
     setSelectedProduct(product);
     setShowCreateAlertModal(true);
@@ -425,6 +428,7 @@ export default function Dashboard() {
         loading={loading}
         onCreateAlert={handleCreateAlert}
         onViewProduct={handleViewProduct}
+        isSmartSortingActive={isSmartSortingActive}
       />
 
       {/* Create Alert Modal */}
