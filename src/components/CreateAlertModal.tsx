@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Alert } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
 import Modal from './ui/Modal';
+import { validateTargetPrice } from '../utils/alertValidation';
 
 interface CreateAlertModalProps {
   isOpen: boolean;
@@ -12,7 +13,6 @@ interface CreateAlertModalProps {
     url: string;
     image: string;
     currentPrice: number;
-    targetPrice?: string;
   };
   existingAlert?: Alert;
 }
@@ -20,6 +20,7 @@ interface CreateAlertModalProps {
 export default function CreateAlertModal({ isOpen, onClose, productData, existingAlert }: CreateAlertModalProps) {
   const { createAlert, updateAlert, alertPreferences } = useAlerts();
   const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     targetPrice: productData?.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '',
     alertType: 'price_drop' as Alert['alertType'],
@@ -27,6 +28,13 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
     pushNotifications: alertPreferences?.pushNotifications ?? true,
     smsNotifications: alertPreferences?.smsNotifications ?? false,
   });
+
+  // Validation function using the utility
+  const validateTargetPriceInput = (targetPrice: string, currentPrice: number) => {
+    const target = parseFloat(targetPrice);
+    const validation = validateTargetPrice(target, currentPrice);
+    return validation.isValid ? null : validation.errors[0]?.message || 'Invalid target price';
+  };
 
   // Initialize form with existing alert data if editing
   useEffect(() => {
@@ -38,25 +46,22 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
         pushNotifications: existingAlert.notificationPreferences.push,
         smsNotifications: existingAlert.notificationPreferences.sms,
       });
+      // Clear validation error when editing existing alert
+      setValidationError(null);
     }
   }, [existingAlert]);
 
   // Update form data when productData changes (for new alerts)
   useEffect(() => {
     if (productData && !existingAlert) {
-      // Use product's existing target price if available, otherwise calculate 90% of current price
-      const existingTargetPrice = (productData as any).targetPrice;
-      const calculatedTargetPrice = existingTargetPrice || (productData.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '');
-      
+      const calculatedTargetPrice = productData.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '';
       if (process.env.NODE_ENV === 'development') {
         console.log('🔍 CreateAlertModal price calculation:', {
           productName: productData.name,
           currentPrice: productData.currentPrice,
-          existingTargetPrice: existingTargetPrice,
           calculatedTargetPrice: calculatedTargetPrice
         });
       }
-      
       setFormData({
         targetPrice: calculatedTargetPrice,
         alertType: 'price_drop' as Alert['alertType'],
@@ -64,12 +69,24 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
         pushNotifications: alertPreferences?.pushNotifications ?? true,
         smsNotifications: alertPreferences?.smsNotifications ?? false,
       });
+      // Clear validation error when product data changes
+      setValidationError(null);
     }
   }, [productData, existingAlert, alertPreferences]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productData) return;
+
+    // Validate target price before submission
+    const targetPrice = parseFloat(formData.targetPrice);
+    const currentPrice = productData.currentPrice;
+    
+    const error = validateTargetPriceInput(formData.targetPrice, currentPrice);
+    if (error) {
+      setValidationError(error);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -110,6 +127,10 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
       onClose();
     } catch (error) {
       console.error('Failed to save alert:', error);
+      // Handle API validation errors
+      if (error instanceof Error && error.message.includes('Target price')) {
+        setValidationError(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -145,10 +166,21 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
             type="number"
             step="0.01"
             value={formData.targetPrice}
-            onChange={(e) => setFormData(prev => ({ ...prev, targetPrice: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setFormData(prev => ({ ...prev, targetPrice: newValue }));
+              if (productData) {
+                setValidationError(validateTargetPriceInput(newValue, productData.currentPrice));
+              }
+            }}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              validationError ? 'border-red-500' : 'border-gray-300'
+            }`}
             required
           />
+          {validationError && (
+            <p className="text-red-500 text-sm mt-1">{validationError}</p>
+          )}
         </div>
 
 

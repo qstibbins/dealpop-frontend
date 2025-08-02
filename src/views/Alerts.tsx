@@ -232,6 +232,7 @@ export default function Alerts() {
           image: selectedAlert.productImage,
           currentPrice: selectedAlert.currentPrice,
         } : undefined}
+        existingAlert={selectedAlert}
       />
 
       {selectedAlert && (
