@@ -142,19 +142,4 @@ export class ImageService {
     return optimizedUrl;
   }
 
-  /**
-   * Get optimized image URL for product detail pages
-   */
-  static getProductDetailImage(imageUrl: string, productName: string): string {
-    if (!this.isValidImageUrl(imageUrl)) {
-      return this.getFallbackImage(productName);
-    }
-
-    return this.optimizeImageUrl(imageUrl, {
-      width: 600,
-      height: 600,
-      quality: 90,
-      format: 'webp'
-    });
-  }
 } 
