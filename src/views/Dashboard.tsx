@@ -71,6 +71,18 @@ export default function Dashboard() {
       url: 'https://example.com/sofa',
       extractedAt: new Date().toISOString(),
     },
+    {
+      id: '4',
+      imageUrl: ImageService.getFallbackImage('Gaming Monitor'),
+      title: 'Gaming Monitor',
+      price: '299.99',
+      vendor: 'GameStore',
+      targetPrice: '349.99',
+      expiresIn: '15 days',
+      status: 'tracking',
+      url: 'https://example.com/monitor',
+      extractedAt: new Date().toISOString(),
+    },
   ];
 
   // Load products from Chrome storage

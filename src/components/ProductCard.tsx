@@ -134,7 +134,13 @@ export default function ProductCard({
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
             <p className="text-xs text-gray-500">Current Price</p>
-            <p className="font-semibold text-gray-600">${price}</p>
+            <p className={`font-semibold ${
+              targetPrice && parseFloat(price.replace(/[^0-9.]/g, '')) <= parseFloat(targetPrice.replace(/[^0-9.]/g, ''))
+                ? 'text-green-600'
+                : 'text-gray-600'
+            }`}>
+              ${price}
+            </p>
           </div>
           {targetPrice && (
             <div>
