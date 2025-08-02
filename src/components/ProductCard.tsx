@@ -134,13 +134,14 @@ export default function ProductCard({
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
             <p className="text-xs text-gray-500">Current Price</p>
-            <p className={`font-semibold ${
-              targetPrice && parseFloat(price.replace(/[^0-9.]/g, '')) <= parseFloat(targetPrice.replace(/[^0-9.]/g, ''))
-                ? 'text-green-600'
-                : 'text-gray-600'
-            }`}>
-              ${price}
-            </p>
+            <div className="flex items-center space-x-2">
+              <p className="font-bold text-gray-900">${price}</p>
+              {targetPrice && parseFloat(price.replace(/[^0-9.]/g, '')) <= parseFloat(targetPrice.replace(/[^0-9.]/g, '')) && (
+                <span className="px-2 py-1 text-xs font-bold text-green-600 bg-green-100 rounded-full">
+                  DEAL
+                </span>
+              )}
+            </div>
           </div>
           {targetPrice && (
             <div>
@@ -155,24 +156,13 @@ export default function ProductCard({
             Tracker ends in {expiresIn}
           </p>
         )}
-        
-        {url && (
-          <a 
-            href={url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-xs text-blue-600 hover:text-blue-800 underline block truncate mb-3"
-          >
-            View Original
-          </a>
-        )}
 
         {/* Create Alert and View Product Buttons */}
         <div className="flex space-x-2 relative z-20">
           {onCreateAlert && (
             <button
               onClick={handleCreateAlert}
-              className="flex-1 px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+              className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
             >
               Create Alert
             </button>
@@ -180,7 +170,7 @@ export default function ProductCard({
           {onViewProduct && url && (
             <button
               onClick={handleViewProduct}
-              className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+              className="flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
             >
               View Product
             </button>
