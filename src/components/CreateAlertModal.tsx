@@ -12,6 +12,7 @@ interface CreateAlertModalProps {
     url: string;
     image: string;
     currentPrice: number;
+    targetPrice?: string;
   };
   existingAlert?: Alert;
 }
@@ -21,8 +22,6 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     targetPrice: productData?.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '',
-    priceDropPercentage: alertPreferences?.defaultPriceDropPercentage || 10,
-    absolutePriceDrop: alertPreferences?.defaultAbsolutePriceDrop || 10,
     alertType: 'price_drop' as Alert['alertType'],
     emailNotifications: alertPreferences?.emailNotifications ?? true,
     pushNotifications: alertPreferences?.pushNotifications ?? true,
@@ -34,8 +33,6 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
     if (existingAlert) {
       setFormData({
         targetPrice: existingAlert.targetPrice.toString(),
-        priceDropPercentage: existingAlert.thresholds.priceDropPercentage,
-        absolutePriceDrop: existingAlert.thresholds.absolutePriceDrop,
         alertType: existingAlert.alertType,
         emailNotifications: existingAlert.notificationPreferences.email,
         pushNotifications: existingAlert.notificationPreferences.push,
@@ -43,6 +40,32 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
       });
     }
   }, [existingAlert]);
+
+  // Update form data when productData changes (for new alerts)
+  useEffect(() => {
+    if (productData && !existingAlert) {
+      // Use product's existing target price if available, otherwise calculate 90% of current price
+      const existingTargetPrice = (productData as any).targetPrice;
+      const calculatedTargetPrice = existingTargetPrice || (productData.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '');
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 CreateAlertModal price calculation:', {
+          productName: productData.name,
+          currentPrice: productData.currentPrice,
+          existingTargetPrice: existingTargetPrice,
+          calculatedTargetPrice: calculatedTargetPrice
+        });
+      }
+      
+      setFormData({
+        targetPrice: calculatedTargetPrice,
+        alertType: 'price_drop' as Alert['alertType'],
+        emailNotifications: alertPreferences?.emailNotifications ?? true,
+        pushNotifications: alertPreferences?.pushNotifications ?? true,
+        smsNotifications: alertPreferences?.smsNotifications ?? false,
+      });
+    }
+  }, [productData, existingAlert, alertPreferences]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,15 +83,10 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
             push: formData.pushNotifications,
             sms: formData.smsNotifications,
           },
-          thresholds: {
-            priceDropPercentage: formData.priceDropPercentage,
-            absolutePriceDrop: formData.absolutePriceDrop,
-          },
         });
       } else {
         // Create new alert
         await createAlert({
-          userId: '', // Will be set by the service
           productId: productData.id,
           productName: productData.name,
           productUrl: productData.url,
@@ -83,8 +101,8 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
             sms: formData.smsNotifications,
           },
           thresholds: {
-            priceDropPercentage: formData.priceDropPercentage,
-            absolutePriceDrop: formData.absolutePriceDrop,
+            priceDropPercentage: 10,
+            absolutePriceDrop: 10,
           },
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
         });
@@ -133,33 +151,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Price Drop Percentage
-          </label>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            value={formData.priceDropPercentage}
-            onChange={(e) => setFormData(prev => ({ ...prev, priceDropPercentage: parseFloat(e.target.value) }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Absolute Price Drop ($)
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={formData.absolutePriceDrop}
-            onChange={(e) => setFormData(prev => ({ ...prev, absolutePriceDrop: parseFloat(e.target.value) }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">

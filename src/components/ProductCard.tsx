@@ -57,6 +57,16 @@ export default function ProductCard({
       url,
       extractedAt,
     };
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 ProductCard passing to modal:', {
+        productId: id,
+        productTitle: title,
+        price: price,
+        targetPrice: targetPrice
+      });
+    }
+    
     onCreateAlert(product);
   };
 

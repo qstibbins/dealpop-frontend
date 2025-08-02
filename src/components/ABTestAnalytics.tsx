@@ -1,3 +1,5 @@
+import { apiService } from '../services/api';
+
 interface ABTestEvent {
   variant: 'original' | 'v2';
   event: 'view' | 'signup' | 'google_signup' | 'login';
@@ -9,46 +11,50 @@ class ABTestAnalytics {
   private events: ABTestEvent[] = [];
 
   // Track when a variant is shown
-  trackView(variant: 'original' | 'v2', userId?: string) {
-    this.trackEvent({
+  async trackView(variant: 'original' | 'v2', userId?: string) {
+    const event: ABTestEvent = {
       variant,
       event: 'view',
       timestamp: Date.now(),
       userId
-    });
+    };
+    await this.trackEvent(event);
   }
 
   // Track signup attempts
-  trackSignup(variant: 'original' | 'v2', userId?: string) {
-    this.trackEvent({
+  async trackSignup(variant: 'original' | 'v2', userId?: string) {
+    const event: ABTestEvent = {
       variant,
       event: 'signup',
       timestamp: Date.now(),
       userId
-    });
+    };
+    await this.trackEvent(event);
   }
 
   // Track Google signup attempts
-  trackGoogleSignup(variant: 'original' | 'v2', userId?: string) {
-    this.trackEvent({
+  async trackGoogleSignup(variant: 'original' | 'v2', userId?: string) {
+    const event: ABTestEvent = {
       variant,
       event: 'google_signup',
       timestamp: Date.now(),
       userId
-    });
+    };
+    await this.trackEvent(event);
   }
 
   // Track login attempts
-  trackLogin(variant: 'original' | 'v2', userId?: string) {
-    this.trackEvent({
+  async trackLogin(variant: 'original' | 'v2', userId?: string) {
+    const event: ABTestEvent = {
       variant,
       event: 'login',
       timestamp: Date.now(),
       userId
-    });
+    };
+    await this.trackEvent(event);
   }
 
-  private trackEvent(event: ABTestEvent) {
+  private async trackEvent(event: ABTestEvent) {
     this.events.push(event);
     
     // Store in localStorage for persistence
@@ -56,16 +62,31 @@ class ABTestAnalytics {
     storedEvents.push(event);
     localStorage.setItem('abTestEvents', JSON.stringify(storedEvents));
     
-    // In a real app, you'd send this to your analytics service
-    console.log('AB Test Event:', event);
+    // Send to API
+    try {
+      await apiService.recordABTestEvent(event);
+      console.log('AB Test Event sent to API:', event);
+    } catch (error) {
+      console.error('Failed to send AB test event to API:', error);
+    }
   }
 
-  // Get analytics data
-  getAnalytics() {
+  // Get analytics data from API
+  async getAnalytics() {
+    try {
+      const response = await apiService.getABTestAnalytics();
+      return (response as any).analytics || response;
+    } catch (error) {
+      console.error('Failed to get AB test analytics from API:', error);
+      // Fallback to local analytics
+      return this.getLocalAnalytics();
+    }
+  }
+
+  // Get local analytics data (fallback)
+  getLocalAnalytics() {
     const views = this.events.filter(e => e.event === 'view');
     const signups = this.events.filter(e => e.event === 'signup');
-    // const googleSignups = this.events.filter(e => e.event === 'google_signup');
-    // const logins = this.events.filter(e => e.event === 'login');
 
     const originalViews = views.filter(e => e.variant === 'original').length;
     const v2Views = views.filter(e => e.variant === 'v2').length;
