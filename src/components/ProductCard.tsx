@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useImage } from '../hooks/useImage';
+import { useToast } from '../contexts/ToastContext';
 import StatusBadge from './ui/StatusBadge';
 
 type ProductCardProps = {
@@ -12,8 +14,8 @@ type ProductCardProps = {
   status?: 'tracking' | 'paused' | 'completed';
   url?: string;
   extractedAt?: string;
-  onCreateAlert?: (product: any) => void;
-  onViewProduct?: (url: string) => void;
+  onCreateAlert?: (product: any) => Promise<void>;
+  onViewProduct?: (url: string) => Promise<void>;
 };
 
 export default function ProductCard({
@@ -34,34 +36,54 @@ export default function ProductCard({
     optimize: true,
     preload: false,
   });
+  const { showToast } = useToast();
+  const [isCreatingAlert, setIsCreatingAlert] = useState(false);
+  const [isViewingProduct, setIsViewingProduct] = useState(false);
 
 
 
 
 
-  const handleCreateAlert = (e: React.MouseEvent) => {
+  const handleCreateAlert = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!onCreateAlert) return;
     
-    const product = {
-      id,
-      imageUrl,
-      title,
-      price,
-      vendor,
-      targetPrice,
-      expiresIn,
-      status,
-      url,
-      extractedAt,
-    };
-    onCreateAlert(product);
+    setIsCreatingAlert(true);
+    try {
+      const product = {
+        id,
+        imageUrl,
+        title,
+        price,
+        vendor,
+        targetPrice,
+        expiresIn,
+        status,
+        url,
+        extractedAt,
+      };
+      await onCreateAlert(product);
+      showToast('Alert created successfully!', 'success');
+    } catch (error) {
+      showToast('Failed to create alert. Please try again.', 'error');
+    } finally {
+      setIsCreatingAlert(false);
+    }
   };
 
-  const handleViewProduct = (e: React.MouseEvent) => {
+  const handleViewProduct = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!onViewProduct || !url) return;
-    onViewProduct(url);
+    
+    setIsViewingProduct(true);
+    try {
+      await onViewProduct(url);
+      showToast('Opening product page...', 'info');
+    } catch (error) {
+      showToast('Failed to open product page. Please try again.', 'error');
+    } finally {
+      setIsViewingProduct(false);
+    }
   };
 
   return (
@@ -137,21 +159,43 @@ export default function ProductCard({
         </div>
 
         {/* Create Alert and View Product Buttons */}
-        <div className="flex space-x-2 relative z-20">
+        <div className="flex flex-col space-y-2 relative z-20">
           {onCreateAlert && (
             <button
               onClick={handleCreateAlert}
-              className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+              disabled={isCreatingAlert}
+              className="w-full px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Create Alert
+              {isCreatingAlert ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating...
+                </>
+              ) : (
+                'Create Alert'
+              )}
             </button>
           )}
           {onViewProduct && url && (
             <button
               onClick={handleViewProduct}
-              className="flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+              disabled={isViewingProduct}
+              className="w-full px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              View Product
+              {isViewingProduct ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-1 h-3 w-3 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Opening...
+                </>
+              ) : (
+                'View Product'
+              )}
             </button>
           )}
         </div>

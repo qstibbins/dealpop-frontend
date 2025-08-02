@@ -6,8 +6,8 @@ interface SearchResultsProps {
   filteredProducts: ExtractedProduct[];
   loading: boolean;
   className?: string;
-  onCreateAlert?: (product: any) => void;
-  onViewProduct?: (url: string) => void;
+  onCreateAlert?: (product: any) => Promise<void>;
+  onViewProduct?: (url: string) => Promise<void>;
 }
 
 export default function SearchResults({ 

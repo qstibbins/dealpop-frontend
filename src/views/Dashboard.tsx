@@ -202,13 +202,17 @@ export default function Dashboard() {
     return SearchService.filterProducts(extractedProducts, debouncedFilters);
   }, [products, debouncedFilters, filter]);
 
-  const handleCreateAlert = (product: any) => {
+  const handleCreateAlert = async (product: any) => {
     setSelectedProduct(product);
     setShowCreateAlertModal(true);
+    // Return a resolved promise to satisfy the async interface
+    return Promise.resolve();
   };
 
-  const handleViewProduct = (url: string) => {
+  const handleViewProduct = async (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
+    // Return a resolved promise to satisfy the async interface
+    return Promise.resolve();
   };
 
   const getFilterButtonClass = (filterValue: typeof filter) => {

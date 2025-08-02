@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export type StatusType = 'tracking' | 'paused' | 'completed' | 'active' | 'triggered' | 'dismissed' | 'expired';
 

@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AlertProvider } from './contexts/AlertContext';
+import { ToastProvider } from './contexts/ToastContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 import Sidebar from './layout/Sidebar';
 import Dashboard from './views/Dashboard';
@@ -15,6 +16,7 @@ function App() {
   return (
     <AuthProvider>
       <AlertProvider>
+        <ToastProvider>
         <div className="flex">
           <Routes>
             <Route path="/login" element={<ABTestLogin />} />
@@ -46,6 +48,7 @@ function App() {
             } />
           </Routes>
         </div>
+        </ToastProvider>
       </AlertProvider>
     </AuthProvider>
   )
