@@ -5,7 +5,9 @@ import { ImageService } from '../services/imageService';
 import SearchFiltersComponent from '../components/SearchFilters';
 import SearchResults from '../components/SearchResults';
 import CreateAlertModal from '../components/CreateAlertModal';
+import AlertHistoryModal from '../components/AlertHistoryModal';
 import { useSearch } from '../hooks/useSearch';
+import { useAlerts } from '../contexts/AlertContext';
 
 interface Product {
   id: string;
@@ -33,6 +35,10 @@ export default function Dashboard() {
   const [showCreateAlertModal, setShowCreateAlertModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [filter, setFilter] = useState<'all' | 'tracking' | 'paused' | 'completed' | 'deals'>('all');
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  
+  const { getAlertStats } = useAlerts();
+  const alertStats = getAlertStats();
 
   // Dummy products fallback
   const dummyProducts: Product[] = [
@@ -236,7 +242,22 @@ export default function Dashboard() {
   return (
     <main className="p-6 flex-1 bg-white">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">Product Tracker</h1>
+        {/* Header with Alert Icon */}
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Product Tracker</h1>
+          <button
+            onClick={() => setShowAlertModal(true)}
+            className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+            title="View Alerts"
+          >
+            <span className="text-2xl">🔔</span>
+            {alertStats.active > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {alertStats.active}
+              </span>
+            )}
+          </button>
+        </div>
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -350,6 +371,14 @@ export default function Dashboard() {
           image: selectedProduct.imageUrl,
           currentPrice: parseFloat(selectedProduct.price.replace(/[^0-9.]/g, '')),
         } : undefined}
+      />
+
+      {/* Alert Management Modal */}
+      <AlertHistoryModal
+        isOpen={showAlertModal}
+        onClose={() => setShowAlertModal(false)}
+        alertId="all"
+        alertName="All Alerts"
       />
     </main>
   );
