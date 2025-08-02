@@ -32,6 +32,7 @@ export default function Dashboard() {
   });
   const [showCreateAlertModal, setShowCreateAlertModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [filter, setFilter] = useState<'all' | 'tracking' | 'paused' | 'completed' | 'deals'>('all');
 
   // Dummy products fallback
   const dummyProducts: Product[] = [
@@ -159,10 +160,25 @@ export default function Dashboard() {
 
 
 
-  // Filter products based on search criteria
+  // Filter products based on status and deal status
   const filteredProducts = useMemo(() => {
+    let filtered = products;
+
+    // Apply status filter
+    if (filter !== 'all' && filter !== 'deals') {
+      filtered = filtered.filter(product => product.status === filter);
+    }
+
+    // Apply deals filter (products where current price <= target price)
+    if (filter === 'deals') {
+      filtered = filtered.filter(product => 
+        product.targetPrice && 
+        parseFloat(product.price.replace(/[^0-9.]/g, '')) <= parseFloat(product.targetPrice.replace(/[^0-9.]/g, ''))
+      );
+    }
+
     // Convert Product[] to ExtractedProduct[] for the search service
-    const extractedProducts = products.map(product => ({
+    const extractedProducts = filtered.map(product => ({
       id: product.id,
       product_name: product.title,
       price: product.price,
@@ -178,7 +194,7 @@ export default function Dashboard() {
     }));
 
     return SearchService.filterProducts(extractedProducts, debouncedFilters);
-  }, [products, debouncedFilters]);
+  }, [products, debouncedFilters, filter]);
 
   const handleCreateAlert = (product: any) => {
     setSelectedProduct(product);
@@ -187,6 +203,34 @@ export default function Dashboard() {
 
   const handleViewProduct = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const getFilterButtonClass = (filterValue: typeof filter) => {
+    return `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+      filter === filterValue
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+    }`;
+  };
+
+  const getFilterCount = (filterType: typeof filter) => {
+    switch (filterType) {
+      case 'all':
+        return stats.totalProducts;
+      case 'tracking':
+        return stats.trackingProducts;
+      case 'paused':
+        return products.filter(p => p.status === 'paused').length;
+      case 'completed':
+        return stats.completedProducts;
+      case 'deals':
+        return products.filter(product => 
+          product.targetPrice && 
+          parseFloat(product.price.replace(/[^0-9.]/g, '')) <= parseFloat(product.targetPrice.replace(/[^0-9.]/g, ''))
+        ).length;
+      default:
+        return 0;
+    }
   };
 
   return (
@@ -212,6 +256,40 @@ export default function Dashboard() {
             <div className="text-2xl font-bold text-yellow-600">${stats.totalSavings}</div>
             <div className="text-sm text-yellow-600">Total Savings</div>
           </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex space-x-2 mb-6">
+          <button
+            onClick={() => setFilter('all')}
+            className={getFilterButtonClass('all')}
+          >
+            All ({getFilterCount('all')})
+          </button>
+          <button
+            onClick={() => setFilter('tracking')}
+            className={getFilterButtonClass('tracking')}
+          >
+            Tracking ({getFilterCount('tracking')})
+          </button>
+          <button
+            onClick={() => setFilter('paused')}
+            className={getFilterButtonClass('paused')}
+          >
+            Paused ({getFilterCount('paused')})
+          </button>
+          <button
+            onClick={() => setFilter('completed')}
+            className={getFilterButtonClass('completed')}
+          >
+            Completed ({getFilterCount('completed')})
+          </button>
+          <button
+            onClick={() => setFilter('deals')}
+            className={getFilterButtonClass('deals')}
+          >
+            Deals ({getFilterCount('deals')})
+          </button>
         </div>
 
         {/* Search and Filters */}
