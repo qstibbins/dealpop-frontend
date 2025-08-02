@@ -130,12 +130,17 @@ export default function ProductCard({
         
         <p className="text-gray-600 text-sm mb-2">{vendor}</p>
         
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xl font-bold text-green-600">${price}</p>
+        {/* Current Price and Target Price Display */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <p className="text-xs text-gray-500">Current Price</p>
+            <p className="font-semibold text-gray-600">${price}</p>
+          </div>
           {targetPrice && (
-            <p className="text-sm text-gray-500">
-              Target: ${targetPrice}
-            </p>
+            <div>
+              <p className="text-xs text-gray-500">Target Price</p>
+              <p className="font-semibold text-blue-600">${targetPrice}</p>
+            </div>
           )}
         </div>
         
