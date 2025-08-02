@@ -259,8 +259,8 @@ export default function Dashboard() {
           </button>
         </div>
         
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {/* Stats Cards - Hidden */}
+        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="text-2xl font-bold text-blue-600">{stats.totalProducts}</div>
             <div className="text-sm text-blue-600">Total Products</div>
@@ -277,7 +277,7 @@ export default function Dashboard() {
             <div className="text-2xl font-bold text-yellow-600">${stats.totalSavings}</div>
             <div className="text-sm text-yellow-600">Total Savings</div>
           </div>
-        </div>
+        </div> */}
 
         {/* Filter Tabs */}
         <div className="flex space-x-2 mb-6">
