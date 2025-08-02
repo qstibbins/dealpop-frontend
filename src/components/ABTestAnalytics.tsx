@@ -10,6 +10,21 @@ interface ABTestEvent {
 class ABTestAnalytics {
   private events: ABTestEvent[] = [];
 
+  constructor() {
+    // Load stored events from localStorage on initialization
+    this.loadStoredEvents();
+  }
+
+  private loadStoredEvents() {
+    try {
+      const storedEvents = JSON.parse(localStorage.getItem('abTestEvents') || '[]');
+      this.events = storedEvents;
+    } catch (error) {
+      console.error('Failed to load stored AB test events:', error);
+      this.events = [];
+    }
+  }
+
   // Track when a variant is shown
   async trackView(variant: 'original' | 'v2', userId?: string) {
     const event: ABTestEvent = {
@@ -62,12 +77,18 @@ class ABTestAnalytics {
     storedEvents.push(event);
     localStorage.setItem('abTestEvents', JSON.stringify(storedEvents));
     
-    // Send to API
+    // Try to send to API, but don't fail if not authenticated
     try {
       await apiService.recordABTestEvent(event);
       console.log('AB Test Event sent to API:', event);
     } catch (error) {
-      console.error('Failed to send AB test event to API:', error);
+      // Don't log errors for authentication issues on login page
+      if (error instanceof Error && error.message.includes('User not authenticated')) {
+        // Silently store locally - will be sent when user logs in
+        console.log('AB Test Event stored locally (will sync when authenticated):', event);
+      } else {
+        console.error('Failed to send AB test event to API:', error);
+      }
     }
   }
 
@@ -108,6 +129,32 @@ class ABTestAnalytics {
   clearAnalytics() {
     this.events = [];
     localStorage.removeItem('abTestEvents');
+  }
+
+  // Sync stored events to API when user logs in
+  async syncStoredEvents() {
+    try {
+      const storedEvents = JSON.parse(localStorage.getItem('abTestEvents') || '[]');
+      if (storedEvents.length > 0) {
+        console.log(`Syncing ${storedEvents.length} stored AB test events to API...`);
+        
+        // Send each stored event to API
+        for (const event of storedEvents) {
+          try {
+            await apiService.recordABTestEvent(event);
+            console.log('Synced AB Test Event:', event);
+          } catch (error) {
+            console.error('Failed to sync AB test event:', error);
+          }
+        }
+        
+        // Clear stored events after successful sync
+        localStorage.removeItem('abTestEvents');
+        console.log('AB test events synced successfully');
+      }
+    } catch (error) {
+      console.error('Failed to sync stored AB test events:', error);
+    }
   }
 }
 

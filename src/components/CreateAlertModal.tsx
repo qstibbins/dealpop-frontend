@@ -3,6 +3,7 @@ import { Alert } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
 import Modal from './ui/Modal';
 import { validateTargetPrice } from '../utils/alertValidation';
+import { formatPrice } from '../utils/priceFormatting';
 
 interface CreateAlertModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface CreateAlertModalProps {
     url: string;
     image: string;
     currentPrice: number;
+    targetPrice?: string; // Add targetPrice from database
   };
   existingAlert?: Alert;
 }
@@ -54,16 +56,22 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
   // Update form data when productData changes (for new alerts)
   useEffect(() => {
     if (productData && !existingAlert) {
+      // Use target price from database if available, otherwise calculate default
+      const targetPriceFromDatabase = productData.targetPrice;
       const calculatedTargetPrice = productData.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '';
+      const finalTargetPrice = targetPriceFromDatabase || calculatedTargetPrice;
+      
       if (process.env.NODE_ENV === 'development') {
         console.log('🔍 CreateAlertModal price calculation:', {
           productName: productData.name,
           currentPrice: productData.currentPrice,
-          calculatedTargetPrice: calculatedTargetPrice
+          targetPriceFromDatabase: targetPriceFromDatabase,
+          calculatedTargetPrice: calculatedTargetPrice,
+          finalTargetPrice: finalTargetPrice
         });
       }
       setFormData({
-        targetPrice: calculatedTargetPrice,
+        targetPrice: finalTargetPrice,
         alertType: 'price_drop' as Alert['alertType'],
         emailNotifications: alertPreferences?.emailNotifications ?? true,
         pushNotifications: alertPreferences?.pushNotifications ?? true,
@@ -79,7 +87,6 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
     if (!productData) return;
 
     // Validate target price before submission
-    const targetPrice = parseFloat(formData.targetPrice);
     const currentPrice = productData.currentPrice;
     
     const error = validateTargetPriceInput(formData.targetPrice, currentPrice);
@@ -152,7 +159,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
           />
           <div>
             <h3 className="font-semibold text-sm">{productData.name}</h3>
-            <p className="text-sm text-gray-600">${productData.currentPrice}</p>
+            <p className="text-sm text-gray-600">{formatPrice(productData.currentPrice)}</p>
           </div>
         </div>
       )}

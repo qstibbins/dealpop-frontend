@@ -1,5 +1,6 @@
 import { useImage } from '../hooks/useImage';
 import StatusBadge from './ui/StatusBadge';
+import { formatPrice } from '../utils/priceFormatting';
 
 type ProductCardProps = {
   id: string;
@@ -132,7 +133,7 @@ export default function ProductCard({
           <div>
             <p className="text-xs text-gray-500">Current Price</p>
             <div className="flex items-center space-x-2">
-              <p className="font-bold text-gray-900">${price}</p>
+              <p className="font-bold text-gray-900">{formatPrice(price)}</p>
               {targetPrice && parseFloat(price.replace(/[^0-9.]/g, '')) <= parseFloat(targetPrice.replace(/[^0-9.]/g, '')) && (
                 <span className="px-2 py-1 text-xs font-bold text-green-600 bg-green-100 rounded-full">
                   DEAL
@@ -143,7 +144,7 @@ export default function ProductCard({
           {targetPrice && (
             <div>
               <p className="text-xs text-gray-500">Target Price</p>
-              <p className="font-semibold text-blue-600">${targetPrice}</p>
+              <p className="font-semibold text-blue-600">{formatPrice(targetPrice)}</p>
             </div>
           )}
         </div>

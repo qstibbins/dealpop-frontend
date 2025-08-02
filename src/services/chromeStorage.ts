@@ -19,6 +19,7 @@ export interface ExtractedProduct {
   id: string;
   product_name: string;
   price: string;
+  originalPrice?: number; // Add originalPrice to preserve numeric price for API calls
   color?: string;
   brand: string;
   capacity?: string;

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { SearchService } from '../services/searchService';
 import { ImageService } from '../services/imageService';
@@ -8,13 +9,16 @@ import CreateAlertModal from '../components/CreateAlertModal';
 import AlertHistoryModal from '../components/AlertHistoryModal';
 import { useSearch } from '../hooks/useSearch';
 import { useAlerts } from '../contexts/AlertContext';
+import { useAuth } from '../contexts/AuthContext';
 import AlertDebugInfo from '../components/AlertDebugInfo';
+import { formatPrice } from '../utils/priceFormatting';
 
 interface Product {
   id: string;
   imageUrl: string;
   title: string;
   price: string;
+  originalPrice?: number; // Keep original numeric price for API calls
   vendor: string;
   targetPrice?: string;
   expiresIn?: string;
@@ -24,6 +28,8 @@ interface Product {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { filters, debouncedFilters, updateFilters } = useSearch(SearchService.getDefaultFilters());
@@ -37,6 +43,7 @@ export default function Dashboard() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [filter, setFilter] = useState<'all' | 'tracking' | 'paused' | 'completed' | 'deals'>('all');
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const { alerts, getAlertStats } = useAlerts();
   const alertStats = getAlertStats();
@@ -82,60 +89,20 @@ export default function Dashboard() {
     return foundAlert;
   }, [alerts]);
 
-  // Dummy products fallback
-  const dummyProducts: Product[] = [
-    {
-      id: '1',
-      imageUrl: ImageService.getFallbackImage('Sample Laptop'),
-      title: 'Sample Laptop',
-      price: '999.99',
-      vendor: 'TechStore',
-      targetPrice: '899.99',
-      expiresIn: '10 days',
-      status: 'tracking',
-      url: 'https://example.com/laptop',
-      extractedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      imageUrl: ImageService.getFallbackImage('Wireless Headphones'),
-      title: 'Wireless Headphones',
-      price: '199.99',
-      vendor: 'AudioShop',
-      targetPrice: '149.99',
-      expiresIn: '5 days',
-      status: 'paused',
-      url: 'https://example.com/headphones',
-      extractedAt: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      imageUrl: ImageService.getFallbackImage('Modern Sofa'),
-      title: 'Modern Sofa',
-      price: '499.99',
-      vendor: 'HomeStore',
-      targetPrice: '399.99',
-      expiresIn: '20 days',
-      status: 'completed',
-      url: 'https://example.com/sofa',
-      extractedAt: new Date().toISOString(),
-    },
-    {
-      id: '4',
-      imageUrl: ImageService.getFallbackImage('Gaming Monitor'),
-      title: 'Gaming Monitor',
-      price: '299.99',
-      vendor: 'GameStore',
-      targetPrice: '349.99',
-      expiresIn: '15 days',
-      status: 'tracking',
-      url: 'https://example.com/monitor',
-      extractedAt: new Date().toISOString(),
-    },
-  ];
+  // No dummy products - we'll show proper error states instead
+
+  // Check authentication and redirect if needed
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+  }, [user, navigate]);
 
   // Load products from API
   useEffect(() => {
+    if (!user) return; // Don't load products if not authenticated
+    
     const loadProducts = async () => {
       try {
         setLoading(true);
@@ -168,6 +135,7 @@ export default function Dashboard() {
               imageUrl: product.imageUrl || product.productImage || ImageService.getFallbackImage(product.productName || product.title),
               title: product.productName || product.title,
               price: finalPrice,
+              originalPrice: product.currentPrice || product.price, // Keep original numeric price
               vendor: product.vendor || product.store || product.retailer || product.seller || 'Unknown',
               targetPrice: product.targetPrice?.toString(),
               expiresIn: product.expiresIn,
@@ -178,12 +146,8 @@ export default function Dashboard() {
           });
         }
         
-        // Fallback to dummy products if no data from API
-        if (convertedProducts.length === 0) {
-          console.log('No products from API, using dummy data');
-          convertedProducts = dummyProducts;
-        }
-        
+        // Always use real data from API, even if empty
+        setError(null); // Clear any previous errors
         setProducts(convertedProducts);
         
         // Calculate stats
@@ -202,14 +166,91 @@ export default function Dashboard() {
         setStats({ totalProducts, trackingProducts, completedProducts, totalSavings });
       } catch (error) {
         console.error('Failed to load products from API:', error);
-        // Fallback to dummy products on error
-        setProducts(dummyProducts);
-        setStats({
-          totalProducts: dummyProducts.length,
-          trackingProducts: dummyProducts.filter(p => p.status === 'tracking').length,
-          completedProducts: dummyProducts.filter(p => p.status === 'completed').length,
-          totalSavings: 150,
-        });
+        
+        // Check if this is a network/connection error or authentication error
+        const isNetworkError = error instanceof TypeError || 
+                              (error instanceof Error && error.message.includes('fetch')) ||
+                              (error instanceof Error && error.message.includes('network')) ||
+                              (error instanceof Error && error.message.includes('connection')) ||
+                              (error instanceof Error && error.message.includes('User not authenticated'));
+        
+        if (isNetworkError) {
+          // Network error - use dummy products as fallback
+          console.log('Network error detected, using dummy products as fallback');
+          setProducts([
+            {
+              id: '1',
+              imageUrl: ImageService.getFallbackImage('Sample Laptop'),
+              title: 'Sample Laptop',
+              price: '999.99',
+              originalPrice: 999.99,
+              vendor: 'TechStore',
+              targetPrice: '899.99',
+              expiresIn: '10 days',
+              status: 'tracking' as const,
+              url: 'https://example.com/laptop',
+              extractedAt: new Date().toISOString(),
+            },
+            {
+              id: '2',
+              imageUrl: ImageService.getFallbackImage('Wireless Headphones'),
+              title: 'Wireless Headphones',
+              price: '199.99',
+              originalPrice: 199.99,
+              vendor: 'AudioShop',
+              targetPrice: '149.99',
+              expiresIn: '5 days',
+              status: 'paused' as const,
+              url: 'https://example.com/headphones',
+              extractedAt: new Date().toISOString(),
+            },
+            {
+              id: '3',
+              imageUrl: ImageService.getFallbackImage('Modern Sofa'),
+              title: 'Modern Sofa',
+              price: '499.99',
+              originalPrice: 499.99,
+              vendor: 'HomeStore',
+              targetPrice: '399.99',
+              expiresIn: '20 days',
+              status: 'completed' as const,
+              url: 'https://example.com/sofa',
+              extractedAt: new Date().toISOString(),
+            },
+            {
+              id: '4',
+              imageUrl: ImageService.getFallbackImage('Gaming Monitor'),
+              title: 'Gaming Monitor',
+              price: '299.99',
+              originalPrice: 299.99,
+              vendor: 'GameStore',
+              targetPrice: '349.99',
+              expiresIn: '15 days',
+              status: 'tracking' as const,
+              url: 'https://example.com/monitor',
+              extractedAt: new Date().toISOString(),
+            },
+          ]);
+          setStats({
+            totalProducts: 4,
+            trackingProducts: 2,
+            completedProducts: 1,
+            totalSavings: 150,
+          });
+          setError(error instanceof Error && error.message.includes('User not authenticated') 
+            ? 'Authentication issue. Showing demo data. Please log in again.' 
+            : 'Network connection issue. Showing demo data.');
+        } else {
+          // API error - show empty state
+          setProducts([]);
+          setError(error instanceof Error ? error.message : 'Failed to load products');
+          setStats({
+            totalProducts: 0,
+            trackingProducts: 0,
+            completedProducts: 0,
+            totalSavings: 0,
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -258,6 +299,7 @@ export default function Dashboard() {
           id: product.id,
           product_name: product.title || 'Unknown Product',
           price: product.price || '0',
+          originalPrice: product.originalPrice, // Preserve originalPrice for API calls
           vendor: product.vendor || 'Unknown',
           targetPrice: existingAlert ? existingAlert.targetPrice?.toString() : product.targetPrice,
           expiresIn: product.expiresIn,
@@ -276,6 +318,7 @@ export default function Dashboard() {
           id: product.id,
           product_name: product.title || 'Unknown Product',
           price: product.price || '0',
+          originalPrice: product.originalPrice, // Preserve originalPrice for API calls
           vendor: product.vendor || 'Unknown',
           targetPrice: product.targetPrice,
           expiresIn: product.expiresIn,
@@ -344,13 +387,30 @@ export default function Dashboard() {
 
   return (
     <main className="p-6 flex-1 bg-white">
+      {/* Network Error Warning Banner */}
+      {error && error.includes('Network connection issue') && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-yellow-400">⚠️</span>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">Demo Mode</h3>
+              <p className="text-sm text-yellow-700 mt-1">
+                Network connection issue detected. You're viewing demo data. Alerts created with demo products will not work.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="mb-6">
         {/* Header with Alert Icon and Savings */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold">Product Tracker</h1>
             <div className="text-sm text-green-600 font-medium">
-              Total Saved: <span className="font-bold">${stats.totalSavings}</span>
+              Total Saved: <span className="font-bold">{formatPrice(stats.totalSavings)}</span>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -425,6 +485,45 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Empty State - No Products */}
+      {!loading && products.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">📦</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Products Available
+          </h3>
+          <p className="text-gray-600 mb-6">
+            {error && error.includes('Authentication issue') ? 
+              "Authentication issue. Please log in again to access your data." :
+              error && error.includes('Network connection issue') ? 
+                "Network connection issue. Showing demo data. Please check your connection and try again." :
+                error ? 
+                  "Unable to load products from the database. Please check your connection and try again." :
+                  "No products have been added to the database yet."
+            }
+          </p>
+          {error && (
+            <div className="space-x-2">
+              {error.includes('Authentication issue') ? (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Go to Login
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Retry
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Search Results */}
       <SearchResults
         products={products.map(product => {
@@ -445,6 +544,7 @@ export default function Dashboard() {
               id: product.id,
               product_name: product.title,
               price: product.price,
+              originalPrice: product.originalPrice, // Preserve originalPrice for API calls
               vendor: product.vendor,
               targetPrice: finalTargetPrice,
               expiresIn: product.expiresIn,
@@ -462,6 +562,7 @@ export default function Dashboard() {
               id: product.id,
               product_name: product.title || 'Unknown Product',
               price: product.price || '0',
+              originalPrice: product.originalPrice, // Preserve originalPrice for API calls
               vendor: product.vendor || 'Unknown',
               targetPrice: product.targetPrice,
               expiresIn: product.expiresIn,
@@ -490,13 +591,22 @@ export default function Dashboard() {
           setSelectedProduct(null);
         }}
         productData={selectedProduct ? (() => {
-          const parsedPrice = parseFloat(selectedProduct.price.replace(/[^0-9.]/g, ''));
+          // Use originalPrice if available, otherwise parse the formatted price
+          const currentPrice = selectedProduct.originalPrice || parseFloat(selectedProduct.price.replace(/[^0-9.]/g, ''));
+          
+          // Use the SAME target price logic as ProductCard for consistency
+          const existingAlert = getExistingAlert(selectedProduct.id);
+          const finalTargetPrice = existingAlert ? existingAlert.targetPrice?.toString() : selectedProduct.targetPrice;
+          
           if (process.env.NODE_ENV === 'development') {
             console.log('🔍 Modal price debugging:', {
-              originalPrice: selectedProduct.price,
-              parsedPrice: parsedPrice,
+              originalPrice: selectedProduct.originalPrice,
+              formattedPrice: selectedProduct.price,
+              parsedPrice: currentPrice,
               productTitle: selectedProduct.title,
-              targetPrice: selectedProduct.targetPrice
+              productTargetPrice: selectedProduct.targetPrice,
+              alertTargetPrice: existingAlert?.targetPrice,
+              finalTargetPrice: finalTargetPrice
             });
           }
           return {
@@ -504,8 +614,8 @@ export default function Dashboard() {
             name: selectedProduct.title,
             url: selectedProduct.url,
             image: selectedProduct.imageUrl,
-            currentPrice: parsedPrice,
-            targetPrice: selectedProduct.targetPrice,
+            currentPrice: currentPrice,
+            targetPrice: finalTargetPrice, // Use same logic as ProductCard for consistency
           };
         })() : undefined}
         existingAlert={selectedProduct ? getExistingAlert(selectedProduct.id) : undefined}

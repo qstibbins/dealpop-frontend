@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { AuthService } from '../services/firebase';
+import { abTestAnalytics } from '../components/ABTestAnalytics';
 
 interface AuthContextType {
   user: User | null;
@@ -34,6 +35,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = AuthService.onAuthStateChanged((user) => {
       setUser(user);
       setLoading(false);
+      
+      // Sync stored AB test events when user logs in
+      if (user) {
+        abTestAnalytics.syncStoredEvents();
+      }
     });
 
     return () => unsubscribe();

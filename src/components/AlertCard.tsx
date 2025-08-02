@@ -3,6 +3,7 @@ import { Alert } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
 import ConfirmDialog from './ui/ConfirmDialog';
 import StatusBadge from './ui/StatusBadge';
+import { formatPrice, formatPercentage } from '../utils/priceFormatting';
 
 interface AlertCardProps {
   alert: Alert;
@@ -33,10 +34,6 @@ export default function AlertCard({ alert, onEdit }: AlertCardProps) {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatPrice = (price: number) => {
-    return `$${price.toFixed(2)}`;
   };
 
   const handleDismiss = async () => {
@@ -107,7 +104,7 @@ export default function AlertCard({ alert, onEdit }: AlertCardProps) {
         <div className="mb-3">
           <p className="text-xs text-gray-500">Price Drop Needed</p>
           <p className="font-semibold text-red-600">
-            {formatPrice(Math.abs(priceDifference))} ({priceDifferencePercentage.toFixed(1)}%)
+            {formatPrice(Math.abs(priceDifference))} ({formatPercentage(priceDifferencePercentage)}%)
           </p>
         </div>
 
