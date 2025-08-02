@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { SearchFilters as SearchFiltersType } from '../services/searchService';
 import { ExtractedProduct } from '../services/chromeStorage';
 import SearchSuggestions from './SearchSuggestions';
+import StatusBadge from './ui/StatusBadge';
 
 interface SearchFiltersProps {
   filters: SearchFiltersType;
@@ -117,13 +118,24 @@ export default function SearchFilters({
                 <button
                   key={status}
                   onClick={() => handleFilterChange('status', status)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`transition-all duration-200 ${
                     filters.status === status
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'ring-2 ring-blue-500 ring-offset-2'
+                      : 'hover:scale-105'
                   }`}
                 >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                  {status === 'all' ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
+                      <span className="text-xs">📋</span>
+                      <span>All</span>
+                    </span>
+                  ) : (
+                    <StatusBadge 
+                      status={status as 'tracking' | 'paused' | 'completed'} 
+                      size="md"
+                      className={filters.status === status ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
+                    />
+                  )}
                 </button>
               ))}
             </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
 import ConfirmDialog from './ui/ConfirmDialog';
+import StatusBadge from './ui/StatusBadge';
 
 interface AlertCardProps {
   alert: Alert;
@@ -13,20 +14,7 @@ export default function AlertCard({ alert, onEdit }: AlertCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'triggered':
-        return 'bg-red-100 text-red-800';
-      case 'dismissed':
-        return 'bg-gray-100 text-gray-800';
-      case 'expired':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+
 
   const getAlertTypeIcon = (type: string) => {
     switch (type) {
@@ -79,9 +67,7 @@ export default function AlertCard({ alert, onEdit }: AlertCardProps) {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
             <span className="text-lg">{getAlertTypeIcon(alert.alertType)}</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(alert.status)}`}>
-              {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
-            </span>
+            <StatusBadge status={alert.status} size="sm" />
           </div>
           <div className="text-xs text-gray-500">
             {formatDate(alert.createdAt)}
