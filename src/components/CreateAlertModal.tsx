@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
 import Modal from './ui/Modal';
@@ -13,10 +13,11 @@ interface CreateAlertModalProps {
     image: string;
     currentPrice: number;
   };
+  existingAlert?: Alert;
 }
 
-export default function CreateAlertModal({ isOpen, onClose, productData }: CreateAlertModalProps) {
-  const { createAlert, alertPreferences } = useAlerts();
+export default function CreateAlertModal({ isOpen, onClose, productData, existingAlert }: CreateAlertModalProps) {
+  const { createAlert, updateAlert, alertPreferences } = useAlerts();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     targetPrice: productData?.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '',
@@ -28,36 +29,69 @@ export default function CreateAlertModal({ isOpen, onClose, productData }: Creat
     smsNotifications: alertPreferences?.smsNotifications ?? false,
   });
 
+  // Initialize form with existing alert data if editing
+  useEffect(() => {
+    if (existingAlert) {
+      setFormData({
+        targetPrice: existingAlert.targetPrice.toString(),
+        priceDropPercentage: existingAlert.thresholds.priceDropPercentage,
+        absolutePriceDrop: existingAlert.thresholds.absolutePriceDrop,
+        alertType: existingAlert.alertType,
+        emailNotifications: existingAlert.notificationPreferences.email,
+        pushNotifications: existingAlert.notificationPreferences.push,
+        smsNotifications: existingAlert.notificationPreferences.sms,
+      });
+    }
+  }, [existingAlert]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productData) return;
 
     setLoading(true);
     try {
-      await createAlert({
-        userId: '', // Will be set by the service
-        productId: productData.id,
-        productName: productData.name,
-        productUrl: productData.url,
-        productImage: productData.image,
-        currentPrice: productData.currentPrice,
-        targetPrice: parseFloat(formData.targetPrice),
-        alertType: formData.alertType,
-        status: 'active',
-        notificationPreferences: {
-          email: formData.emailNotifications,
-          push: formData.pushNotifications,
-          sms: formData.smsNotifications,
-        },
-        thresholds: {
-          priceDropPercentage: formData.priceDropPercentage,
-          absolutePriceDrop: formData.absolutePriceDrop,
-        },
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-      });
+      if (existingAlert) {
+        // Update existing alert
+        await updateAlert(existingAlert.id, {
+          targetPrice: parseFloat(formData.targetPrice),
+          alertType: formData.alertType,
+          notificationPreferences: {
+            email: formData.emailNotifications,
+            push: formData.pushNotifications,
+            sms: formData.smsNotifications,
+          },
+          thresholds: {
+            priceDropPercentage: formData.priceDropPercentage,
+            absolutePriceDrop: formData.absolutePriceDrop,
+          },
+        });
+      } else {
+        // Create new alert
+        await createAlert({
+          userId: '', // Will be set by the service
+          productId: productData.id,
+          productName: productData.name,
+          productUrl: productData.url,
+          productImage: productData.image,
+          currentPrice: productData.currentPrice,
+          targetPrice: parseFloat(formData.targetPrice),
+          alertType: formData.alertType,
+          status: 'active',
+          notificationPreferences: {
+            email: formData.emailNotifications,
+            push: formData.pushNotifications,
+            sms: formData.smsNotifications,
+          },
+          thresholds: {
+            priceDropPercentage: formData.priceDropPercentage,
+            absolutePriceDrop: formData.absolutePriceDrop,
+          },
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        });
+      }
       onClose();
     } catch (error) {
-      console.error('Failed to create alert:', error);
+      console.error('Failed to save alert:', error);
     } finally {
       setLoading(false);
     }
@@ -67,7 +101,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData }: Creat
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create Price Alert"
+      title={existingAlert ? "Edit Price Alert" : "Create Price Alert"}
       size="md"
     >
       {productData && (
@@ -175,7 +209,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData }: Creat
             disabled={loading}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Creating...' : 'Create Alert'}
+            {loading ? 'Saving...' : (existingAlert ? 'Update Alert' : 'Create Alert')}
           </button>
         </div>
       </form>

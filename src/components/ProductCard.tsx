@@ -14,6 +14,7 @@ type ProductCardProps = {
   extractedAt?: string;
   onCreateAlert?: (product: any) => void;
   onViewProduct?: (url: string) => void;
+  hasAlert?: boolean;
 };
 
 export default function ProductCard({
@@ -29,6 +30,7 @@ export default function ProductCard({
   extractedAt,
   onCreateAlert,
   onViewProduct,
+  hasAlert = false,
 }: ProductCardProps) {
   const { imageState, currentImageUrl, retry } = useImage(imageUrl, title, {
     optimize: true,
@@ -136,14 +138,14 @@ export default function ProductCard({
           )}
         </div>
 
-        {/* Create Alert and View Product Buttons */}
+        {/* Create/Edit Alert and View Product Buttons */}
         <div className="flex space-x-2 relative z-20">
           {onCreateAlert && (
             <button
               onClick={handleCreateAlert}
               className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
             >
-              Create Alert
+              {hasAlert ? 'Edit Alert' : 'Create Alert'}
             </button>
           )}
           {onViewProduct && url && (

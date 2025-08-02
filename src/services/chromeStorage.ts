@@ -29,6 +29,7 @@ export interface ExtractedProduct {
   targetPrice?: string;
   expiresIn?: string;
   status: 'tracking' | 'paused' | 'completed';
+  hasAlert?: boolean;
 }
 
 export class ChromeStorageService {

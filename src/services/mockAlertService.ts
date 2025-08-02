@@ -48,6 +48,58 @@ export class MockAlertService {
     // ];
 
     const mockAlerts: Alert[] = [
+      // Alerts for Dashboard dummy products (for testing dynamic button functionality)
+      {
+        id: 'alert-dashboard-1',
+        userId: 'mock-user-id',
+        productId: '1', // Sample Laptop
+        productName: 'Sample Laptop',
+        productUrl: 'https://example.com/laptop',
+        productImage: `${import.meta.env.BASE_URL}img/laptop.png`,
+        currentPrice: 999.99,
+        targetPrice: 899.99,
+        alertType: 'price_drop',
+        status: 'active',
+        notificationPreferences: {
+          email: true,
+          push: true,
+          sms: false,
+        },
+        thresholds: {
+          priceDropPercentage: 10,
+          absolutePriceDrop: 100,
+        },
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+        updatedAt: new Date().toISOString(),
+        lastCheckedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+        expiresAt: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days from now
+      },
+      {
+        id: 'alert-dashboard-2',
+        userId: 'mock-user-id',
+        productId: '3', // Modern Sofa
+        productName: 'Modern Sofa',
+        productUrl: 'https://example.com/sofa',
+        productImage: `${import.meta.env.BASE_URL}img/sofa.png`,
+        currentPrice: 499.99,
+        targetPrice: 399.99,
+        alertType: 'price_drop',
+        status: 'active',
+        notificationPreferences: {
+          email: true,
+          push: false,
+          sms: true,
+        },
+        thresholds: {
+          priceDropPercentage: 20,
+          absolutePriceDrop: 100,
+        },
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
+        updatedAt: new Date().toISOString(),
+        lastCheckedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+        expiresAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(), // 20 days from now
+      },
+      // Original mock alerts (keeping some for variety)
       {
         id: 'alert-1',
         userId: 'mock-user-id',
@@ -258,6 +310,75 @@ export class MockAlertService {
     if (!localStorage.getItem(MOCK_ALERT_PREFERENCES_KEY)) {
       localStorage.setItem(MOCK_ALERT_PREFERENCES_KEY, JSON.stringify(this.generateMockAlertPreferences()));
     }
+  }
+
+  // Force create dashboard alerts for testing (always creates them)
+  static forceCreateDashboardAlerts(): void {
+    const existingAlerts = this.getAlerts();
+    
+    // Create dashboard-specific alerts
+    const dashboardAlerts: Alert[] = [
+      {
+        id: 'alert-dashboard-1',
+        userId: 'mock-user-id',
+        productId: '1', // Sample Laptop
+        productName: 'Sample Laptop',
+        productUrl: 'https://example.com/laptop',
+        productImage: `${import.meta.env.BASE_URL}img/laptop.png`,
+        currentPrice: 999.99,
+        targetPrice: 899.99,
+        alertType: 'price_drop',
+        status: 'active',
+        notificationPreferences: {
+          email: true,
+          push: true,
+          sms: false,
+        },
+        thresholds: {
+          priceDropPercentage: 10,
+          absolutePriceDrop: 100,
+        },
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastCheckedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'alert-dashboard-3',
+        userId: 'mock-user-id',
+        productId: '3', // Modern Sofa
+        productName: 'Modern Sofa',
+        productUrl: 'https://example.com/sofa',
+        productImage: `${import.meta.env.BASE_URL}img/sofa.png`,
+        currentPrice: 499.99,
+        targetPrice: 399.99,
+        alertType: 'price_drop',
+        status: 'active',
+        notificationPreferences: {
+          email: true,
+          push: false,
+          sms: true,
+        },
+        thresholds: {
+          priceDropPercentage: 20,
+          absolutePriceDrop: 100,
+        },
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastCheckedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+
+    // Remove any existing dashboard alerts and add new ones
+    const filteredAlerts = existingAlerts.filter(alert => 
+      !alert.productId.startsWith('1') && !alert.productId.startsWith('3')
+    );
+    
+    const allAlerts = [...filteredAlerts, ...dashboardAlerts];
+    this.saveAlerts(allAlerts);
+    
+    console.log('🔔 Dashboard alerts created/updated:', dashboardAlerts.map(a => `${a.productName} (ID: ${a.productId})`));
   }
 
   // Get alerts from localStorage

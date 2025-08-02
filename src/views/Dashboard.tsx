@@ -8,6 +8,8 @@ import CreateAlertModal from '../components/CreateAlertModal';
 import AlertHistoryModal from '../components/AlertHistoryModal';
 import { useSearch } from '../hooks/useSearch';
 import { useAlerts } from '../contexts/AlertContext';
+import { setupMockAlerts, getAlertStatus } from '../utils/setupMockAlerts';
+import { MockAlertService } from '../services/mockAlertService';
 
 interface Product {
   id: string;
@@ -37,8 +39,17 @@ export default function Dashboard() {
   const [filter, setFilter] = useState<'all' | 'tracking' | 'paused' | 'completed' | 'deals'>('all');
   const [showAlertModal, setShowAlertModal] = useState(false);
   
-  const { getAlertStats } = useAlerts();
+  const { alerts, getAlertStats } = useAlerts();
   const alertStats = getAlertStats();
+  
+  // Helper function to check if product has an alert
+  const productHasAlert = (productId: string) => {
+    const hasAlert = alerts.some(alert => alert.productId === productId && alert.status === 'active');
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 Product ${productId} has alert: ${hasAlert}`);
+    }
+    return hasAlert;
+  };
 
   // Dummy products fallback
   const dummyProducts: Product[] = [
@@ -94,6 +105,18 @@ export default function Dashboard() {
 
   // Load products from Chrome storage
   useEffect(() => {
+    // Auto-initialize mock alerts in development mode
+    if (process.env.NODE_ENV === 'development') {
+      MockAlertService.initializeMockData();
+      MockAlertService.forceCreateDashboardAlerts();
+      console.log('🔔 Mock alerts initialized for development testing');
+      
+      // Debug: Show what alerts are available
+      const alerts = MockAlertService.getAlerts();
+      const activeAlerts = alerts.filter(alert => alert.status === 'active');
+      console.log('📋 Available alerts:', activeAlerts.map(a => `${a.productName} (ID: ${a.productId})`));
+    }
+
     const loadProducts = async () => {
       try {
         const extractedProducts = await ChromeStorageService.getProducts();
@@ -197,14 +220,20 @@ export default function Dashboard() {
       brand: '', // Add default values for missing fields
       color: '',
       capacity: '',
+      hasAlert: productHasAlert(product.id), // Add hasAlert property
     }));
 
     return SearchService.filterProducts(extractedProducts, debouncedFilters);
-  }, [products, debouncedFilters, filter]);
+  }, [products, debouncedFilters, filter, alerts]); // Add alerts to dependencies
 
   const handleCreateAlert = (product: any) => {
     setSelectedProduct(product);
     setShowCreateAlertModal(true);
+  };
+
+  // Helper function to get existing alert for a product
+  const getExistingAlert = (productId: string) => {
+    return alerts.find(alert => alert.productId === productId && alert.status === 'active');
   };
 
   const handleViewProduct = (url: string) => {
@@ -250,18 +279,53 @@ export default function Dashboard() {
               Total Saved: <span className="font-bold">${stats.totalSavings}</span>
             </div>
           </div>
-          <button
-            onClick={() => setShowAlertModal(true)}
-            className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
-            title="View Alerts"
-          >
-            <span className="text-2xl">🔔</span>
-            {alertStats.active > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {alertStats.active}
-              </span>
+          <div className="flex items-center space-x-2">
+            {/* Development buttons - only show in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="flex space-x-2 mr-4">
+                <button
+                  onClick={() => {
+                    setupMockAlerts();
+                    // Force a re-render to update the UI
+                    window.location.reload();
+                  }}
+                  className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                  title="Set up mock alerts for testing"
+                >
+                  Setup Alerts
+                </button>
+                <button
+                  onClick={() => {
+                    MockAlertService.forceCreateDashboardAlerts();
+                    window.location.reload();
+                  }}
+                  className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                  title="Force create dashboard alerts"
+                >
+                  Force Dashboard Alerts
+                </button>
+                <button
+                  onClick={getAlertStatus}
+                  className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                  title="Check alert status"
+                >
+                  Alert Status
+                </button>
+              </div>
             )}
-          </button>
+            <button
+              onClick={() => setShowAlertModal(true)}
+              className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+              title="View Alerts"
+            >
+              <span className="text-2xl">🔔</span>
+              {alertStats.active > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {alertStats.active}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
         
         {/* Stats Cards - Hidden */}
@@ -355,6 +419,7 @@ export default function Dashboard() {
           brand: '',
           color: '',
           capacity: '',
+          hasAlert: productHasAlert(product.id),
         }))}
         filteredProducts={filteredProducts}
         loading={loading}
@@ -376,6 +441,7 @@ export default function Dashboard() {
           image: selectedProduct.imageUrl,
           currentPrice: parseFloat(selectedProduct.price.replace(/[^0-9.]/g, '')),
         } : undefined}
+        existingAlert={selectedProduct ? getExistingAlert(selectedProduct.id) : undefined}
       />
 
       {/* Alert Management Modal */}
