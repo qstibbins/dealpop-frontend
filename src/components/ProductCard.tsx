@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import { useImage } from '../hooks/useImage';
-import ConfirmDialog from './ui/ConfirmDialog';
 
 type ProductCardProps = {
   id: string;
@@ -13,8 +11,8 @@ type ProductCardProps = {
   status?: 'tracking' | 'paused' | 'completed';
   url?: string;
   extractedAt?: string;
-  onEdit?: (product: any) => void;
-  onDelete?: (id: string) => void;
+  onCreateAlert?: (product: any) => void;
+  onViewProduct?: (url: string) => void;
 };
 
 export default function ProductCard({
@@ -28,15 +26,13 @@ export default function ProductCard({
   status = 'tracking',
   url,
   extractedAt,
-  onEdit,
-  onDelete,
+  onCreateAlert,
+  onViewProduct,
 }: ProductCardProps) {
   const { imageState, currentImageUrl, retry } = useImage(imageUrl, title, {
     optimize: true,
     preload: false,
   });
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -56,22 +52,9 @@ export default function ProductCard({
     return date.toLocaleDateString();
   };
 
-  const handleDelete = async () => {
-    if (!onDelete) return;
-    
-    setIsDeleting(true);
-    try {
-      await onDelete(id);
-    } catch (error) {
-      console.error('Failed to delete product:', error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
+  const handleCreateAlert = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!onEdit) return;
+    if (!onCreateAlert) return;
     
     const product = {
       id,
@@ -85,12 +68,13 @@ export default function ProductCard({
       url,
       extractedAt,
     };
-    onEdit(product);
+    onCreateAlert(product);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
+  const handleViewProduct = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowDeleteConfirm(true);
+    if (!onViewProduct || !url) return;
+    onViewProduct(url);
   };
 
   return (
@@ -172,39 +156,26 @@ export default function ProductCard({
           </a>
         )}
 
-        {/* Edit and Delete Buttons */}
+        {/* Create Alert and View Product Buttons */}
         <div className="flex space-x-2 relative z-20">
-          {onEdit && (
+          {onCreateAlert && (
             <button
-              onClick={handleEdit}
+              onClick={handleCreateAlert}
               className="flex-1 px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
             >
-              Edit
+              Create Alert
             </button>
           )}
-          {onDelete && (
+          {onViewProduct && url && (
             <button
-              onClick={handleDeleteClick}
-              className="flex-1 px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+              onClick={handleViewProduct}
+              className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
             >
-              Delete
+              View Product
             </button>
           )}
         </div>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDelete}
-        title="Delete Product"
-        message={`Are you sure you want to delete "${title}"? This action cannot be undone.`}
-        confirmText="Delete Product"
-        cancelText="Cancel"
-        variant="danger"
-        loading={isDeleting}
-      />
     </>
   );
 }

@@ -6,8 +6,8 @@ interface SearchResultsProps {
   filteredProducts: ExtractedProduct[];
   loading: boolean;
   className?: string;
-  onEdit?: (product: any) => void;
-  onDelete?: (id: string) => void;
+  onCreateAlert?: (product: any) => void;
+  onViewProduct?: (url: string) => void;
 }
 
 export default function SearchResults({ 
@@ -15,8 +15,8 @@ export default function SearchResults({
   filteredProducts, 
   loading, 
   className = '',
-  onEdit,
-  onDelete,
+  onCreateAlert,
+  onViewProduct,
 }: SearchResultsProps) {
 
   if (loading) {
@@ -101,8 +101,8 @@ export default function SearchResults({
               status={product.status}
               url={product.url}
               extractedAt={product.extractedAt}
-              onEdit={onEdit}
-              onDelete={onDelete}
+              onCreateAlert={onCreateAlert}
+              onViewProduct={onViewProduct}
             />
           </div>
         ))}
