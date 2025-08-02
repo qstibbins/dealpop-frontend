@@ -242,9 +242,14 @@ export default function Dashboard() {
   return (
     <main className="p-6 flex-1 bg-white">
       <div className="mb-6">
-        {/* Header with Alert Icon */}
+        {/* Header with Alert Icon and Savings */}
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Product Tracker</h1>
+          <div className="flex items-center space-x-4">
+            <h1 className="text-2xl font-bold">Product Tracker</h1>
+            <div className="text-sm text-green-600 font-medium">
+              Total Saved: <span className="font-bold">${stats.totalSavings}</span>
+            </div>
+          </div>
           <button
             onClick={() => setShowAlertModal(true)}
             className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
