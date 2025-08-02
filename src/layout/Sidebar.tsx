@@ -55,7 +55,6 @@ export default function Sidebar() {
 
       {/* Navigation */}
       {navItem('/dashboard', 'Homepage')}
-      {navItem('/alerts', 'Price Drop Alert')}
       {navItem('/settings', 'Settings')}
       
       {/* Logout Button */}

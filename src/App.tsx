@@ -9,7 +9,6 @@ import ProductDetail from './views/ProductDetail';
 import LoginV2 from './views/LoginV2';
 import ABTestLogin from './components/ABTestLogin';
 import ABTestDashboard from './components/ABTestDashboard';
-import Alerts from './views/Alerts';
 import Settings from './views/Settings';
 import './styles/theme.css'
 
@@ -43,14 +42,6 @@ function App() {
                 <>
                   <Sidebar />
                   <ProductDetail />
-                </>
-              </ProtectedRoute>
-            } />
-            <Route path="/alerts" element={
-              <ProtectedRoute>
-                <>
-                  <Sidebar />
-                  <Alerts />
                 </>
               </ProtectedRoute>
             } />
