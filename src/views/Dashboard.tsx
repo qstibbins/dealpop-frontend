@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../services/api';
+import { apiAdapter } from '../services/apiAdapter';
 import { SearchService } from '../services/searchService';
 import { ImageService } from '../services/imageService';
 import SearchFiltersComponent from '../components/SearchFilters';
@@ -12,6 +12,7 @@ import { useAlerts } from '../contexts/AlertContext';
 import { useAuth } from '../contexts/AuthContext';
 import AlertDebugInfo from '../components/AlertDebugInfo';
 import { formatPrice } from '../utils/priceFormatting';
+import { getUISettings, isStaticMode } from '../config/staticMode';
 
 interface Product {
   id: string;
@@ -106,7 +107,7 @@ export default function Dashboard() {
     const loadProducts = async () => {
       try {
         setLoading(true);
-        const response = await apiService.getProducts();
+        const response = await apiAdapter.getProducts();
         const productsData = (response as any).products || response;
         
         // Convert API response to Product format
@@ -387,6 +388,23 @@ export default function Dashboard() {
 
   return (
     <main className="p-6 flex-1 bg-white">
+      {/* Demo Mode Banner */}
+      {isStaticMode() && getUISettings().SHOW_DEMO_BANNER && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-blue-400">🎯</span>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">Demo Mode</h3>
+              <p className="text-sm text-blue-700 mt-1">
+                {getUISettings().DEMO_BANNER_TEXT}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Network Error Warning Banner */}
       {error && error.includes('Network connection issue') && (
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">

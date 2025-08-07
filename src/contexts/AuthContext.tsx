@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { AuthService } from '../services/firebase';
+import { authAdapter } from '../services/authAdapter';
 import { abTestAnalytics } from '../components/ABTestAnalytics';
 
 interface AuthContextType {
@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = AuthService.onAuthStateChanged((user) => {
+    const unsubscribe = authAdapter.onAuthStateChanged((user) => {
       setUser(user);
       setLoading(false);
       
@@ -46,23 +46,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signInWithGoogle = async () => {
-    return await AuthService.signInWithGoogle();
+    return await authAdapter.signInWithGoogle();
   };
 
   const signInWithFacebook = async () => {
-    return await AuthService.signInWithFacebook();
+    return await authAdapter.signInWithFacebook();
   };
 
   const signInWithEmail = async (email: string, password: string) => {
-    return await AuthService.signInWithEmail(email, password);
+    return await authAdapter.signInWithEmail(email, password);
   };
 
   const createAccountWithEmail = async (email: string, password: string) => {
-    return await AuthService.createAccountWithEmail(email, password);
+    return await authAdapter.createAccountWithEmail(email, password);
   };
 
   const signOut = async () => {
-    return await AuthService.signOut();
+    return await authAdapter.signOut();
   };
 
   const value = {

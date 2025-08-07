@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Alert, AlertPreferences, AlertHistory } from '../types/alerts';
-import { apiService } from '../services/api';
+import { apiAdapter } from '../services/apiAdapter';
 import { useAuth } from './AuthContext';
 
 interface AlertContextType {
@@ -67,8 +67,8 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
     const loadData = async () => {
       try {
         const [alertsResponse, preferencesResponse] = await Promise.all([
-          apiService.getAlerts(),
-          apiService.getUserPreferences(),
+          apiAdapter.getAlerts(),
+          apiAdapter.getUserPreferences(),
         ]);
 
         // Handle different response formats
@@ -96,7 +96,7 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
         userId: user?.uid || '', // Use Firebase user UID
       };
       
-      const response = await apiService.createAlert(alertDataWithUserId);
+      const response = await apiAdapter.createAlert(alertDataWithUserId);
       const newAlert = (response as any).alert || response;
       setAlerts(prev => [newAlert, ...prev]);
       return newAlert;
@@ -113,7 +113,7 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
         console.log('🔄 Updating alert:', alertId, 'with updates:', updates);
       }
       
-      const response = await apiService.updateAlert(alertId, updates);
+      const response = await apiAdapter.updateAlert(alertId, updates);
       const updatedAlert = (response as any).alert || response;
       
       if (process.env.NODE_ENV === 'development') {
@@ -145,7 +145,7 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
 
   const deleteAlert = async (alertId: string) => {
     try {
-      await apiService.deleteAlert(alertId);
+      await apiAdapter.deleteAlert(alertId);
       setAlerts(prev => prev.filter(alert => alert.id !== alertId));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete alert';
@@ -160,7 +160,7 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
 
   const updatePreferences = async (preferences: Partial<AlertPreferences>) => {
     try {
-      const response = await apiService.updateUserPreferences(preferences);
+      const response = await apiAdapter.updateUserPreferences(preferences);
       const updatedPrefs = (response as any).preferences || response;
       setAlertPreferences(prev => prev ? { ...prev, ...updatedPrefs } : updatedPrefs);
     } catch (err) {
@@ -172,7 +172,7 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
 
   const getAlertHistory = async (alertId: string) => {
     try {
-      const response = await apiService.getAlertHistory(alertId);
+      const response = await apiAdapter.getAlertHistory(alertId);
       return (response as any).history || response || [];
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load alert history';
