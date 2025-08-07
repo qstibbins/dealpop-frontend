@@ -89,7 +89,9 @@ class ApiAdapter {
 
   // User Preferences API
   async getUserPreferences() {
-    return this.getService().getUserPreferences();
+    // Pass real user info if available
+    const realUser = this.getRealUser();
+    return this.getService().getUserPreferences(realUser);
   }
 
   async updateUserPreferences(data: any) {
@@ -144,6 +146,18 @@ class ApiAdapter {
   // Check if currently using mock data
   isUsingMockData(): boolean {
     return this.useMockData;
+  }
+
+  // Get real user info if available
+  private getRealUser(): any {
+    try {
+      // Try to get real user from Firebase auth
+      const { getAuth } = require('firebase/auth');
+      const auth = getAuth();
+      return auth.currentUser;
+    } catch (error) {
+      return null;
+    }
   }
 }
 

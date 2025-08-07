@@ -35,7 +35,7 @@ export const STATIC_MODE_CONFIG = {
   // UI settings for static mode
   UI: {
     SHOW_DEMO_BANNER: true,
-    DEMO_BANNER_TEXT: 'Demo Mode - This is a static preview for GitHub Pages',
+    DEMO_BANNER_TEXT: 'Demo Mode - This is a static preview with realistic mock data',
     SHOW_MOCK_DATA_INDICATOR: true,
   }
 };

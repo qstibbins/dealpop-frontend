@@ -3,6 +3,9 @@ import { AuthService } from './firebase';
 import { mockAuthService } from './mockAuthService';
 import { shouldDisableFirebaseAuth } from '../config/staticMode';
 
+// Import the mock auth service to access its setRealUser method
+import { mockAuthService as mockAuth } from './mockAuthService';
+
 class AuthAdapter {
   private useMockAuth: boolean = false;
   private mockAuthEnabled: boolean = true; // Set to false to disable mock auth
@@ -27,11 +30,18 @@ class AuthAdapter {
     try {
       // Try to access Firebase auth to see if it's available
       const { getAuth } = await import('firebase/auth');
-      getAuth(); // Just check if we can import and call getAuth
+      const auth = getAuth();
       
       // If we can get the auth instance without error, Firebase is available
       this.useMockAuth = false;
       console.log('Firebase Auth available, using real authentication');
+      
+      // Listen for real user changes and sync with mock service
+      auth.onAuthStateChanged((user) => {
+        if (this.useMockAuth) {
+          mockAuth.setRealUser(user);
+        }
+      });
     } catch (error) {
       this.useMockAuth = true;
       console.log('Firebase Auth not available, using mock authentication:', error);

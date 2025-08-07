@@ -55,7 +55,7 @@ export const mockProducts: ExtractedProduct[] = [
   {
     id: '4',
     product_name: 'Anker PowerCore 26800 Power Bank',
-    price: '59.99',
+    price: '49.99',
     originalPrice: 59.99,
     color: 'Black',
     brand: 'Anker',
@@ -140,7 +140,7 @@ export const mockProducts: ExtractedProduct[] = [
   {
     id: '9',
     product_name: 'Nike Air Max 270',
-    price: '150.00',
+    price: '120.00',
     originalPrice: 150.00,
     color: 'White/Black',
     brand: 'Nike',

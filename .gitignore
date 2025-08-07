@@ -25,4 +25,4 @@ dist-ssr
 
 # Local env
 .env
-docs/
+my-docs/

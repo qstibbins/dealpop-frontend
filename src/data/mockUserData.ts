@@ -24,31 +24,40 @@ export interface MockUser {
   };
 }
 
-export const mockUser: MockUser = {
-  id: 'demo-user-1',
-  email: 'demo@dealpop.com',
-  displayName: 'Demo User',
-  photoURL: 'https://ui-avatars.com/api/?name=Demo+User&background=0D9488&color=fff',
-  preferences: {
-    theme: 'light',
-    notifications: {
-      email: true,
-      push: true,
-      sms: false,
+// Create a more realistic mock user based on real user info
+export const createMockUser = (realUser?: any): MockUser => {
+  const displayName = realUser?.displayName || 'Demo User';
+  const email = realUser?.email || 'demo@dealpop.com';
+  const photoURL = realUser?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D9488&color=fff`;
+  
+  return {
+    id: realUser?.uid || 'demo-user-1',
+    email,
+    displayName,
+    photoURL,
+    preferences: {
+      theme: 'light',
+      notifications: {
+        email: true,
+        push: true,
+        sms: false,
+      },
+      currency: 'USD',
+      timezone: 'America/New_York',
+      language: 'en',
     },
-    currency: 'USD',
-    timezone: 'America/New_York',
-    language: 'en',
-  },
-  stats: {
-    totalProducts: 12,
-    trackingProducts: 8,
-    completedProducts: 2,
-    totalSavings: 150.00,
-    alertsCreated: 8,
-    alertsTriggered: 2,
-  },
+    stats: {
+      totalProducts: 12,
+      trackingProducts: 8,
+      completedProducts: 2,
+      totalSavings: 920.00, // Updated to match the UI
+      alertsCreated: 8,
+      alertsTriggered: 2,
+    },
+  };
 };
+
+export const mockUser: MockUser = createMockUser();
 
 export const mockVendors = [
   'Amazon',
@@ -109,8 +118,8 @@ export const mockSearchSuggestions = [
   'Wireless Earbuds',
 ];
 
-export const getMockUser = (): MockUser => {
-  return mockUser;
+export const getMockUser = (realUser?: any): MockUser => {
+  return createMockUser(realUser);
 };
 
 export const getMockVendors = (): string[] => {

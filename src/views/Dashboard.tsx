@@ -164,7 +164,17 @@ export default function Dashboard() {
           return sum;
         }, 0);
         
-        setStats({ totalProducts, trackingProducts, completedProducts, totalSavings });
+        // Use realistic stats for demo mode
+        if (isStaticMode()) {
+          setStats({
+            totalProducts: 12,
+            trackingProducts: 8,
+            completedProducts: 2,
+            totalSavings: 920.00, // Match the UI
+          });
+        } else {
+          setStats({ totalProducts, trackingProducts, completedProducts, totalSavings });
+        }
       } catch (error) {
         console.error('Failed to load products from API:', error);
         

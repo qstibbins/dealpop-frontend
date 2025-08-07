@@ -1,6 +1,6 @@
 import { getMockProducts } from '../data/mockProducts';
 import { getMockAlerts, getMockAlertHistory } from '../data/mockAlerts';
-import { getMockVendors, getMockSearchSuggestions } from '../data/mockUserData';
+import { getMockVendors, getMockSearchSuggestions, getMockUser } from '../data/mockUserData';
 
 class MockApiService {
   private delay(ms: number = 500): Promise<void> {
@@ -12,9 +12,34 @@ class MockApiService {
     await this.delay(300);
     const products = getMockProducts();
     
+    // Transform ExtractedProduct to expected API format
+    const transformedProducts = products.map(product => ({
+      id: product.id,
+      productName: product.product_name, // Map product_name to productName
+      title: product.product_name, // Also provide as title for compatibility
+      currentPrice: product.originalPrice || parseFloat(product.price.replace(/[^0-9.]/g, '')),
+      price: product.price,
+      vendor: product.vendor,
+      store: product.vendor, // Provide as store for compatibility
+      retailer: product.vendor, // Provide as retailer for compatibility
+      seller: product.vendor, // Provide as seller for compatibility
+      targetPrice: product.targetPrice,
+      expiresIn: product.expiresIn,
+      status: product.status,
+      productUrl: product.url,
+      url: product.url,
+      imageUrl: product.imageUrl,
+      productImage: product.imageUrl,
+      extractedAt: product.extractedAt,
+      createdAt: product.extractedAt,
+      brand: product.brand,
+      color: product.color,
+      capacity: product.capacity,
+    }));
+    
     // Apply basic filtering if provided
     if (filters) {
-      let filtered = products;
+      let filtered = transformedProducts;
       
       if (filters.status && filters.status !== 'all') {
         filtered = filtered.filter(p => p.status === filters.status);
@@ -28,7 +53,7 @@ class MockApiService {
       
       if (filters.search) {
         filtered = filtered.filter(p => 
-          p.product_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+          p.productName.toLowerCase().includes(filters.search.toLowerCase()) ||
           p.brand?.toLowerCase().includes(filters.search.toLowerCase())
         );
       }
@@ -36,7 +61,7 @@ class MockApiService {
       return { products: filtered };
     }
     
-    return { products };
+    return { products: transformedProducts };
   }
 
   async createProduct(data: any) {
@@ -108,21 +133,10 @@ class MockApiService {
   }
 
   // User Preferences API
-  async getUserPreferences() {
+  async getUserPreferences(realUser?: any) {
     await this.delay(200);
-    return { 
-      preferences: {
-        theme: 'light',
-        notifications: {
-          email: true,
-          push: true,
-          sms: false,
-        },
-        currency: 'USD',
-        timezone: 'America/New_York',
-        language: 'en',
-      }
-    };
+    const user = getMockUser(realUser);
+    return { preferences: user.preferences };
   }
 
   async updateUserPreferences(data: any) {
