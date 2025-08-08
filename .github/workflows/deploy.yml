@@ -36,6 +36,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./dist
         force_orphan: true
+        enable_jekyll: false
         
     - name: Build for PR
       if: github.event_name == 'pull_request'
