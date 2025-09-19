@@ -12,7 +12,7 @@ import { useAlerts } from '../contexts/AlertContext';
 import { useAuth } from '../contexts/AuthContext';
 import AlertDebugInfo from '../components/AlertDebugInfo';
 import { formatPrice } from '../utils/priceFormatting';
-import { getUISettings, isStaticMode } from '../config/staticMode';
+import { isStaticMode } from '../config/staticMode';
 
 interface Product {
   id: string;
@@ -362,6 +362,13 @@ export default function Dashboard() {
   };
 
   const getFilterButtonClass = (filterValue: typeof filter) => {
+    if (filterValue === 'deals') {
+      return `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+        filter === filterValue
+          ? 'bg-pink-500 text-white'
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      }`;
+    }
     return `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
       filter === filterValue
         ? 'bg-blue-600 text-white'
@@ -399,21 +406,19 @@ export default function Dashboard() {
   return (
     <main className="p-6 flex-1 bg-white">
       {/* Demo Mode Banner */}
-      {isStaticMode() && getUISettings().SHOW_DEMO_BANNER && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <span className="text-blue-400">🎯</span>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">Demo Mode</h3>
-              <p className="text-sm text-blue-700 mt-1">
-                {getUISettings().DEMO_BANNER_TEXT}
-              </p>
-            </div>
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <span className="text-blue-400">🎯</span>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-blue-800">Demo Mode</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              This is a static preview with realistic mock data.
+            </p>
           </div>
         </div>
-      )}
+      </div>
       
       {/* Network Error Warning Banner */}
       {error && error.includes('Network connection issue') && (
@@ -432,7 +437,8 @@ export default function Dashboard() {
         </div>
       )}
       
-      <div className="mb-6">
+      {/* Product Tracker Section */}
+      <div className="mb-12">
         {/* Header with Alert Icon and Savings */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
@@ -466,28 +472,28 @@ export default function Dashboard() {
             All ({getFilterCount('all')})
           </button>
           <button
-            onClick={() => setFilter('tracking')}
-            className={getFilterButtonClass('tracking')}
+            onClick={() => setFilter('deals')}
+            className={getFilterButtonClass('deals')}
           >
-            Tracking ({getFilterCount('tracking')})
-          </button>
-          <button
-            onClick={() => setFilter('paused')}
-            className={getFilterButtonClass('paused')}
-          >
-            Paused ({getFilterCount('paused')})
+            DealPop ({getFilterCount('deals')})
           </button>
           <button
             onClick={() => setFilter('completed')}
             className={getFilterButtonClass('completed')}
           >
-            Completed ({getFilterCount('completed')})
+            Expired ({getFilterCount('completed')})
           </button>
           <button
-            onClick={() => setFilter('deals')}
-            className={getFilterButtonClass('deals')}
+            onClick={() => setFilter('tracking')}
+            className={getFilterButtonClass('tracking')}
           >
-            Deals ({getFilterCount('deals')})
+            Active ({getFilterCount('tracking')})
+          </button>
+          <button
+            onClick={() => setFilter('paused')}
+            className={getFilterButtonClass('paused')}
+          >
+            Completed ({getFilterCount('paused')})
           </button>
         </div>
 
@@ -610,6 +616,94 @@ export default function Dashboard() {
         onViewProduct={handleViewProduct}
         isSmartSortingActive={isSmartSortingActive}
       />
+
+      {/* Settings Section */}
+      <div className="mt-12">
+        <h1 className="text-2xl font-bold mb-6">Settings</h1>
+
+        {/* Account Information Section */}
+        <div className="bg-gray-50 rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Account Information</h2>
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-xl font-semibold">
+              DU
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Demo User</p>
+              <p className="text-sm text-gray-600">demo@dealpop.com</p>
+              <p className="text-xs text-gray-500">Provider: Email/Password</p>
+            </div>
+          </div>
+          <div className="text-red-600 font-medium">
+            ADD fields here for first and last name, User name, password
+          </div>
+        </div>
+
+        {/* Notification Settings */}
+        <div className="bg-white border rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Notification Settings</h2>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Email Address</label>
+            <input
+              type="email"
+              className="border px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder=""
+            />
+          </div>
+
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <label className="text-sm font-medium">Email Notifications</label>
+              <p className="text-xs text-gray-500">Receive price drop alerts via email</p>
+            </div>
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-blue-600"
+            />
+          </div>
+
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <label className="text-sm font-medium">SMS Alerts</label>
+              <p className="text-xs text-gray-500">Receive price drop alerts via SMS</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={true}
+              className="form-checkbox h-5 w-5 text-blue-600"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Phone number</label>
+            <input
+              type="tel"
+              className="border px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder=""
+            />
+          </div>
+        </div>
+
+        {/* Account Actions */}
+        <div className="bg-white border rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Account Actions</h2>
+          
+          <div className="space-y-3">
+            <button
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Save settings
+            </button>
+            
+            <button
+              className="w-full bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Create Alert Modal */}
       <CreateAlertModal
