@@ -24,7 +24,13 @@ export default function Sidebar() {
 
   return (
     <aside className="bg-white w-56 min-h-screen p-4 text-sm text-gray-700 border-r">
-      <div className="mb-8 text-xl font-bold text-red-600">dealpop</div>
+      <div className="mb-8">
+        <img 
+          src="/img/DealPop_Horizontal_logo.png" 
+          alt="DealPop" 
+          className="h-8 w-auto"
+        />
+      </div>
       
 
       {/* Navigation */}
