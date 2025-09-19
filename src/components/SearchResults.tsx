@@ -108,6 +108,8 @@ export default function SearchResults({
               price={product.price}
               vendor={product.vendor || 'Unknown'}
               targetPrice={product.targetPrice}
+              previousPrice={product.previousPrice}
+              originalPrice={product.originalPrice}
               expiresIn={product.expiresIn}
               status={product.status}
               url={product.url}

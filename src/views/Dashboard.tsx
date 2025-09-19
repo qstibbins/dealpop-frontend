@@ -6,6 +6,7 @@ import SearchFiltersComponent from '../components/SearchFilters';
 import SearchResults from '../components/SearchResults';
 import CreateAlertModal from '../components/CreateAlertModal';
 import AlertHistoryModal from '../components/AlertHistoryModal';
+import PriceSummary from '../components/PriceSummary';
 import { useSearch } from '../hooks/useSearch';
 import { useAlerts } from '../contexts/AlertContext';
 import { setupMockAlerts, getAlertStatus } from '../utils/setupMockAlerts';
@@ -18,6 +19,8 @@ interface Product {
   price: string;
   vendor: string;
   targetPrice?: string;
+  previousPrice?: string;
+  originalPrice?: string;
   expiresIn?: string;
   status: 'tracking' | 'paused' | 'completed';
   url: string;
@@ -60,6 +63,8 @@ export default function Dashboard() {
       price: '999.99',
       vendor: 'TechStore',
       targetPrice: '899.99',
+      previousPrice: '1099.99',
+      originalPrice: '1199.99',
       expiresIn: '10 days',
       status: 'tracking',
       url: 'https://example.com/laptop',
@@ -72,6 +77,8 @@ export default function Dashboard() {
       price: '199.99',
       vendor: 'AudioShop',
       targetPrice: '149.99',
+      previousPrice: '179.99',
+      originalPrice: '249.99',
       expiresIn: '5 days',
       status: 'paused',
       url: 'https://example.com/headphones',
@@ -84,6 +91,8 @@ export default function Dashboard() {
       price: '499.99',
       vendor: 'HomeStore',
       targetPrice: '399.99',
+      previousPrice: '549.99',
+      originalPrice: '599.99',
       expiresIn: '20 days',
       status: 'completed',
       url: 'https://example.com/sofa',
@@ -96,6 +105,8 @@ export default function Dashboard() {
       price: '299.99',
       vendor: 'GameStore',
       targetPrice: '349.99',
+      previousPrice: '279.99',
+      originalPrice: '329.99',
       expiresIn: '15 days',
       status: 'tracking',
       url: 'https://example.com/monitor',
@@ -331,25 +342,10 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Stats Cards - Hidden */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{stats.totalProducts}</div>
-            <div className="text-sm text-blue-600">Total Products</div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{stats.trackingProducts}</div>
-            <div className="text-sm text-green-600">Tracking</div>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">{stats.completedProducts}</div>
-            <div className="text-sm text-purple-600">Completed</div>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-yellow-600">${stats.totalSavings}</div>
-            <div className="text-sm text-yellow-600">Total Savings</div>
-          </div>
-        </div> */}
+        {/* Enhanced Price Summary */}
+        {products.length > 0 && (
+          <PriceSummary products={products} className="mb-6" />
+        )}
 
         {/* Filter Tabs */}
         <div className="flex space-x-2 mb-6">
@@ -395,6 +391,8 @@ export default function Dashboard() {
             price: product.price,
             vendor: product.vendor,
             targetPrice: product.targetPrice,
+            previousPrice: product.previousPrice,
+            originalPrice: product.originalPrice,
             expiresIn: product.expiresIn,
             status: product.status,
             url: product.url,
@@ -415,6 +413,8 @@ export default function Dashboard() {
           price: product.price,
           vendor: product.vendor,
           targetPrice: product.targetPrice,
+          previousPrice: product.previousPrice,
+          originalPrice: product.originalPrice,
           expiresIn: product.expiresIn,
           status: product.status,
           url: product.url,

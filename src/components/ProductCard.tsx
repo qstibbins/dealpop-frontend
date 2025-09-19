@@ -1,5 +1,8 @@
 import { useImage } from '../hooks/useImage';
 import StatusBadge from './ui/StatusBadge';
+import PriceDisplay from './PriceDisplay';
+import PriceComparisonModal from './PriceComparisonModal';
+import { useState } from 'react';
 
 type ProductCardProps = {
   id: string;
@@ -8,6 +11,8 @@ type ProductCardProps = {
   price: string;
   vendor: string;
   targetPrice?: string;
+  previousPrice?: string;
+  originalPrice?: string;
   expiresIn?: string;
   status?: 'tracking' | 'paused' | 'completed';
   url?: string;
@@ -24,6 +29,8 @@ export default function ProductCard({
   price,
   vendor,
   targetPrice,
+  previousPrice,
+  originalPrice,
   expiresIn,
   status = 'tracking',
   url,
@@ -32,6 +39,7 @@ export default function ProductCard({
   onViewProduct,
   hasAlert = false,
 }: ProductCardProps) {
+  const [showPriceModal, setShowPriceModal] = useState(false);
   const { imageState, currentImageUrl, retry } = useImage(imageUrl, title, {
     optimize: true,
     preload: false,
@@ -117,25 +125,26 @@ export default function ProductCard({
         
         <p className="text-gray-600 text-sm mb-2">{vendor}</p>
         
-        {/* Current Price and Target Price Display */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <p className="text-xs text-gray-500">Current Price</p>
-            <div className="flex items-center space-x-2">
-              <p className="font-bold text-gray-900">${price}</p>
-              {targetPrice && parseFloat(price.replace(/[^0-9.]/g, '')) <= parseFloat(targetPrice.replace(/[^0-9.]/g, '')) && (
-                <span className="px-2 py-1 text-xs font-bold text-green-600 bg-green-100 rounded-full">
-                  DEAL
-                </span>
-              )}
+        {/* Enhanced Price Display */}
+        <div className="mb-3">
+          <div 
+            className="cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+            onClick={() => setShowPriceModal(true)}
+            title="Click for detailed price analysis"
+          >
+            <PriceDisplay
+              currentPrice={price}
+              targetPrice={targetPrice}
+              previousPrice={previousPrice}
+              originalPrice={originalPrice}
+              showTrend={true}
+              showSavings={true}
+              compact={true}
+            />
+            <div className="text-xs text-blue-600 text-center mt-1">
+              Click for detailed analysis →
             </div>
           </div>
-          {targetPrice && (
-            <div>
-              <p className="text-xs text-gray-500">Target Price</p>
-              <p className="font-semibold text-blue-600">${targetPrice}</p>
-            </div>
-          )}
         </div>
 
         {/* Create/Edit Alert and View Product Buttons */}
@@ -158,6 +167,22 @@ export default function ProductCard({
           )}
         </div>
       </div>
+
+      {/* Price Comparison Modal */}
+      <PriceComparisonModal
+        isOpen={showPriceModal}
+        onClose={() => setShowPriceModal(false)}
+        product={{
+          id,
+          title,
+          currentPrice: price,
+          targetPrice,
+          previousPrice,
+          originalPrice,
+          vendor,
+          url,
+        }}
+      />
     </>
   );
 }

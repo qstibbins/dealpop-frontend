@@ -27,6 +27,8 @@ export interface ExtractedProduct {
   imageUrl?: string; // Add image URL field
   extractedAt: string;
   targetPrice?: string;
+  previousPrice?: string;
+  originalPrice?: string;
   expiresIn?: string;
   status: 'tracking' | 'paused' | 'completed';
   hasAlert?: boolean;
