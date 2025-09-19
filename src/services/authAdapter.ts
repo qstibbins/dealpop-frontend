@@ -8,7 +8,6 @@ import { mockAuthService as mockAuth } from './mockAuthService';
 
 class AuthAdapter {
   private useMockAuth: boolean = false;
-  private mockAuthEnabled: boolean = true; // Set to false to disable mock auth
 
   constructor() {
     this.checkFirebaseAvailability();
@@ -19,11 +18,6 @@ class AuthAdapter {
     if (shouldDisableFirebaseAuth()) {
       this.useMockAuth = true;
       console.log('Static mode enabled, using mock authentication');
-      return;
-    }
-
-    if (!this.mockAuthEnabled) {
-      this.useMockAuth = false;
       return;
     }
 

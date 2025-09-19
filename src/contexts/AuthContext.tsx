@@ -39,11 +39,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Sync stored AB test events when user logs in
       if (user) {
         abTestAnalytics.syncStoredEvents();
+        
+        // Check if this is from the extension and send auth data back
+        handleExtensionAuth(user);
       }
     });
 
     return () => unsubscribe();
   }, []);
+
+  // Handle extension authentication communication
+  const handleExtensionAuth = async (user: User) => {
+    try {
+      // Check if this is from the extension
+      const urlParams = new URLSearchParams(window.location.search);
+      const isFromExtension = urlParams.get('extension') === 'true';
+      
+      if (isFromExtension && window.chrome && (window.chrome as any).runtime) {
+        // Get the Firebase ID token
+        const token = await user.getIdToken();
+        
+        // Send auth data to extension
+        (window.chrome as any).runtime.sendMessage({
+          type: 'EXTENSION_AUTH_SUCCESS',
+          user: {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL
+          },
+          token: token
+        }, (response: any) => {
+          if (response && response.success) {
+            // Show success message and close tab after a delay
+            setTimeout(() => {
+              alert('Extension connected successfully! You can close this tab.');
+              window.close();
+            }, 1000);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error handling extension auth:', error);
+    }
+  };
 
   const signInWithGoogle = async () => {
     return await authAdapter.signInWithGoogle();

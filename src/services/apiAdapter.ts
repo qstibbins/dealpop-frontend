@@ -4,7 +4,6 @@ import { shouldForceMockData } from '../config/staticMode';
 
 class ApiAdapter {
   private useMockData: boolean = false;
-  private mockDataEnabled: boolean = true; // Set to false to disable mock data
 
   constructor() {
     // Check if we should use mock data
@@ -16,11 +15,6 @@ class ApiAdapter {
     if (shouldForceMockData()) {
       this.useMockData = true;
       console.log('Static mode enabled, using mock data');
-      return;
-    }
-
-    if (!this.mockDataEnabled) {
-      this.useMockData = false;
       return;
     }
 

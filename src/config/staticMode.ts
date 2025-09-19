@@ -1,13 +1,7 @@
 // Configuration for static mode (GitHub Pages deployment)
 export const STATIC_MODE_CONFIG = {
-  // Enable static mode for GitHub Pages
+  // SINGLE CONFIGURATION VALUE - Change this ONE thing to control everything
   ENABLE_STATIC_MODE: true,
-  
-  // Force mock data mode when in static mode
-  FORCE_MOCK_DATA: true,
-  
-  // Disable Firebase authentication in static mode
-  DISABLE_FIREBASE_AUTH: true,
   
   // Demo mode settings
   DEMO_MODE: {
@@ -45,14 +39,14 @@ export const isStaticMode = (): boolean => {
   return STATIC_MODE_CONFIG.ENABLE_STATIC_MODE;
 };
 
-// Check if we should force mock data
+// Check if we should force mock data - automatically follows static mode
 export const shouldForceMockData = (): boolean => {
-  return STATIC_MODE_CONFIG.FORCE_MOCK_DATA && isStaticMode();
+  return STATIC_MODE_CONFIG.ENABLE_STATIC_MODE;
 };
 
-// Check if Firebase auth should be disabled
+// Check if Firebase auth should be disabled - automatically follows static mode
 export const shouldDisableFirebaseAuth = (): boolean => {
-  return STATIC_MODE_CONFIG.DISABLE_FIREBASE_AUTH && isStaticMode();
+  return STATIC_MODE_CONFIG.ENABLE_STATIC_MODE;
 };
 
 // Get demo mode settings
