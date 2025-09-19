@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Alert, AlertPreferences, AlertHistory } from '../types/alerts';
-import { AlertService } from '../services/alertService';
-import { MockAlertServiceAdapter } from '../services/mockAlertServiceAdapter';
-import { MockAlertService } from '../services/mockAlertService';
+import { apiService } from '../services/api';
 import { useAuth } from './AuthContext';
 
 interface AlertContextType {
@@ -13,7 +11,7 @@ interface AlertContextType {
   error: string | null;
   
   // Alert actions
-  createAlert: (alertData: Omit<Alert, 'id' | 'createdAt' | 'updatedAt' | 'lastCheckedAt'>) => Promise<Alert>;
+  createAlert: (alertData: Omit<Alert, 'id' | 'createdAt' | 'updatedAt' | 'lastCheckedAt' | 'userId'>) => Promise<Alert>;
   updateAlert: (alertId: string, updates: Partial<Alert>) => Promise<void>;
   deleteAlert: (alertId: string) => Promise<void>;
   dismissAlert: (alertId: string) => Promise<void>;
@@ -53,22 +51,6 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
   const [alertPreferences, setAlertPreferences] = useState<AlertPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [useMockService, setUseMockService] = useState(false);
-
-  // Determine which service to use
-  useEffect(() => {
-    // Check if we should use mock service (when Firebase is not available or for testing)
-    const shouldUseMock = !window.chrome || !window.chrome.storage || process.env.NODE_ENV === 'development';
-    setUseMockService(shouldUseMock);
-    
-    if (shouldUseMock) {
-      console.log('🔔 Using Mock Alert Service - Loading fake data for testing');
-      // Initialize mock data
-      MockAlertService.initializeMockData();
-    } else {
-      console.log('🔔 Using Firebase Alert Service');
-    }
-  }, []);
 
   // Load alerts and preferences when user changes
   useEffect(() => {
@@ -84,16 +66,19 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
 
     const loadData = async () => {
       try {
-        const service = useMockService ? MockAlertServiceAdapter : AlertService;
-        
-        const [alertsData, preferencesData] = await Promise.all([
-          service.getUserAlerts(),
-          service.getAlertPreferences(),
+        const [alertsResponse, preferencesResponse] = await Promise.all([
+          apiService.getAlerts(),
+          apiService.getUserPreferences(),
         ]);
 
-        setAlerts(alertsData);
+        // Handle different response formats
+        const alertsData = (alertsResponse as any).alerts || alertsResponse;
+        const preferencesData = (preferencesResponse as any).preferences || preferencesResponse;
+
+        setAlerts(Array.isArray(alertsData) ? alertsData : []);
         setAlertPreferences(preferencesData);
       } catch (err) {
+        console.error('Failed to load alerts:', err);
         setError(err instanceof Error ? err.message : 'Failed to load alerts');
       } finally {
         setLoading(false);
@@ -101,49 +86,71 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
     };
 
     loadData();
+  }, [user]);
 
-    // Subscribe to real-time updates
-    const service = useMockService ? MockAlertServiceAdapter : AlertService;
-    const unsubscribe = service.subscribeToAlerts((updatedAlerts) => {
-      setAlerts(updatedAlerts);
-    });
-
-    return unsubscribe;
-  }, [user, useMockService]);
-
-  const createAlert = async (alertData: Omit<Alert, 'id' | 'createdAt' | 'updatedAt' | 'lastCheckedAt'>) => {
+  const createAlert = async (alertData: Omit<Alert, 'id' | 'createdAt' | 'updatedAt' | 'lastCheckedAt' | 'userId'>) => {
     try {
-      const service = useMockService ? MockAlertServiceAdapter : AlertService;
-      const newAlert = await service.createAlert(alertData);
+      // Include the user ID in the alert data
+      const alertDataWithUserId = {
+        ...alertData,
+        userId: user?.uid || '', // Use Firebase user UID
+      };
+      
+      const response = await apiService.createAlert(alertDataWithUserId);
+      const newAlert = (response as any).alert || response;
       setAlerts(prev => [newAlert, ...prev]);
       return newAlert;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create alert');
-      throw err;
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create alert';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
   const updateAlert = async (alertId: string, updates: Partial<Alert>) => {
     try {
-      const service = useMockService ? MockAlertServiceAdapter : AlertService;
-      await service.updateAlert(alertId, updates);
-      setAlerts(prev => prev.map(alert => 
-        alert.id === alertId ? { ...alert, ...updates } : alert
-      ));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Updating alert:', alertId, 'with updates:', updates);
+      }
+      
+      const response = await apiService.updateAlert(alertId, updates);
+      const updatedAlert = (response as any).alert || response;
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Alert updated successfully:', updatedAlert);
+      }
+      
+      setAlerts(prev => {
+        const newAlerts = prev.map(alert => 
+          alert.id === alertId ? { ...alert, ...updatedAlert } : alert
+        );
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Alerts state updated:', {
+            alertId,
+            oldAlerts: prev,
+            newAlerts: newAlerts
+          });
+        }
+        
+        // Force a re-render by creating a new array
+        return [...newAlerts];
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update alert');
-      throw err;
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update alert';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
   const deleteAlert = async (alertId: string) => {
     try {
-      const service = useMockService ? MockAlertServiceAdapter : AlertService;
-      await service.deleteAlert(alertId);
+      await apiService.deleteAlert(alertId);
       setAlerts(prev => prev.filter(alert => alert.id !== alertId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete alert');
-      throw err;
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete alert';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
@@ -153,22 +160,24 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
 
   const updatePreferences = async (preferences: Partial<AlertPreferences>) => {
     try {
-      const service = useMockService ? MockAlertServiceAdapter : AlertService;
-      await service.updateAlertPreferences(preferences);
-      setAlertPreferences(prev => prev ? { ...prev, ...preferences } : null);
+      const response = await apiService.updateUserPreferences(preferences);
+      const updatedPrefs = (response as any).preferences || response;
+      setAlertPreferences(prev => prev ? { ...prev, ...updatedPrefs } : updatedPrefs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update preferences');
-      throw err;
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update preferences';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
   const getAlertHistory = async (alertId: string) => {
     try {
-      const service = useMockService ? MockAlertServiceAdapter : AlertService;
-      return await service.getAlertHistory(alertId);
+      const response = await apiService.getAlertHistory(alertId);
+      return (response as any).history || response || [];
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load alert history');
-      throw err;
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load alert history';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 

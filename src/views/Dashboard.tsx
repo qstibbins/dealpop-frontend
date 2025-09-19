@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
-import { ChromeStorageService } from '../services/chromeStorage';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { apiService } from '../services/api';
 import { SearchService } from '../services/searchService';
 import { ImageService } from '../services/imageService';
 import SearchFiltersComponent from '../components/SearchFilters';
@@ -9,14 +10,16 @@ import AlertHistoryModal from '../components/AlertHistoryModal';
 import PriceSummary from '../components/PriceSummary';
 import { useSearch } from '../hooks/useSearch';
 import { useAlerts } from '../contexts/AlertContext';
-import { setupMockAlerts, getAlertStatus } from '../utils/setupMockAlerts';
-import { MockAlertService } from '../services/mockAlertService';
+import { useAuth } from '../contexts/AuthContext';
+import AlertDebugInfo from '../components/AlertDebugInfo';
+import { formatPrice } from '../utils/priceFormatting';
 
 interface Product {
   id: string;
   imageUrl: string;
   title: string;
   price: string;
+  originalPrice?: number; // Keep original numeric price for API calls
   vendor: string;
   targetPrice?: string;
   previousPrice?: string;
@@ -28,6 +31,8 @@ interface Product {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { filters, debouncedFilters, updateFilters } = useSearch(SearchService.getDefaultFilters());
@@ -41,164 +46,221 @@ export default function Dashboard() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [filter, setFilter] = useState<'all' | 'tracking' | 'paused' | 'completed' | 'deals'>('all');
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const { alerts, getAlertStats } = useAlerts();
   const alertStats = getAlertStats();
   
   // Helper function to check if product has an alert
-  const productHasAlert = (productId: string) => {
-    const hasAlert = alerts.some(alert => alert.productId === productId && alert.status === 'active');
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🔍 Product ${productId} has alert: ${hasAlert}`);
-    }
-    return hasAlert;
-  };
-
-  // Dummy products fallback
-  const dummyProducts: Product[] = [
-    {
-      id: '1',
-      imageUrl: ImageService.getFallbackImage('Sample Laptop'),
-      title: 'Sample Laptop',
-      price: '999.99',
-      vendor: 'TechStore',
-      targetPrice: '899.99',
-      previousPrice: '1099.99',
-      originalPrice: '1199.99',
-      expiresIn: '10 days',
-      status: 'tracking',
-      url: 'https://example.com/laptop',
-      extractedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      imageUrl: ImageService.getFallbackImage('Wireless Headphones'),
-      title: 'Wireless Headphones',
-      price: '199.99',
-      vendor: 'AudioShop',
-      targetPrice: '149.99',
-      previousPrice: '179.99',
-      originalPrice: '249.99',
-      expiresIn: '5 days',
-      status: 'paused',
-      url: 'https://example.com/headphones',
-      extractedAt: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      imageUrl: ImageService.getFallbackImage('Modern Sofa'),
-      title: 'Modern Sofa',
-      price: '499.99',
-      vendor: 'HomeStore',
-      targetPrice: '399.99',
-      previousPrice: '549.99',
-      originalPrice: '599.99',
-      expiresIn: '20 days',
-      status: 'completed',
-      url: 'https://example.com/sofa',
-      extractedAt: new Date().toISOString(),
-    },
-    {
-      id: '4',
-      imageUrl: ImageService.getFallbackImage('Gaming Monitor'),
-      title: 'Gaming Monitor',
-      price: '299.99',
-      vendor: 'GameStore',
-      targetPrice: '349.99',
-      previousPrice: '279.99',
-      originalPrice: '329.99',
-      expiresIn: '15 days',
-      status: 'tracking',
-      url: 'https://example.com/monitor',
-      extractedAt: new Date().toISOString(),
-    },
-  ];
-
-  // Load products from Chrome storage
-  useEffect(() => {
-    // Auto-initialize mock alerts in development mode
-    if (process.env.NODE_ENV === 'development') {
-      MockAlertService.initializeMockData();
-      MockAlertService.forceCreateDashboardAlerts();
-      console.log('🔔 Mock alerts initialized for development testing');
+  const productHasAlert = useCallback((productId: string) => {
+    // Convert productId to number for comparison since API returns numbers
+    const productIdNum = parseInt(productId, 10);
+    
+    const hasAlert = alerts.some(alert => {
+      // Check if alert has a valid productId and matches the product
+      const alertProductId = alert.productId ? parseInt(alert.productId.toString(), 10) : null;
+      const matches = alertProductId === productIdNum && alert.status === 'active';
       
-      // Debug: Show what alerts are available
-      const alerts = MockAlertService.getAlerts();
-      const activeAlerts = alerts.filter(alert => alert.status === 'active');
-      console.log('📋 Available alerts:', activeAlerts.map(a => `${a.productName} (ID: ${a.productId})`));
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔍 Alert ${alert.id}: productId=${alert.productId}, status=${alert.status}, matches=${matches}`);
+      }
+      
+      return matches;
+    });
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 Product ${productId} (${productIdNum}) has alert: ${hasAlert}`);
     }
+    
+    return hasAlert;
+  }, [alerts]);
 
+  // Helper function to get existing alert for a product
+  const getExistingAlert = useCallback((productId: string) => {
+    // Convert productId to number for comparison since API returns numbers
+    const productIdNum = parseInt(productId, 10);
+    
+    const foundAlert = alerts.find(alert => {
+      const alertProductId = alert.productId ? parseInt(alert.productId.toString(), 10) : null;
+      return alertProductId === productIdNum && alert.status === 'active';
+    });
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 getExistingAlert for product ${productId}:`, foundAlert);
+    }
+    
+    return foundAlert;
+  }, [alerts]);
+
+  // No dummy products - we'll show proper error states instead
+
+  // Check authentication and redirect if needed
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+  }, [user, navigate]);
+
+  // Load products from API
+  useEffect(() => {
+    if (!user) return; // Don't load products if not authenticated
+    
     const loadProducts = async () => {
       try {
-        const extractedProducts = await ChromeStorageService.getProducts();
-        let convertedProducts: Product[] = extractedProducts.map(product => ({
-          id: product.id,
-          imageUrl: product.imageUrl || ImageService.getFallbackImage(product.product_name), // Use extracted image or fallback
-          title: product.product_name,
-          price: product.price,
-          vendor: product.vendor || 'Unknown',
-          targetPrice: product.targetPrice,
-          expiresIn: product.expiresIn,
-          status: product.status || 'tracking',
-          url: product.url,
-          extractedAt: product.extractedAt,
-        }));
+        setLoading(true);
+        const response = await apiService.getProducts();
+        const productsData = (response as any).products || response;
         
-        // Fallback to dummyProducts if Chrome extension API is unavailable or no products
-        if (!window.chrome || !window.chrome.storage || convertedProducts.length === 0) {
-          convertedProducts = dummyProducts;
+        // Convert API response to Product format
+        let convertedProducts: Product[] = [];
+        if (Array.isArray(productsData)) {
+          convertedProducts = productsData.map(product => {
+            // Debug vendor and price information
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🔍 Product data debugging:', {
+                productId: product.id,
+                productTitle: product.productName || product.title,
+                originalCurrentPrice: product.currentPrice,
+                originalPrice: product.price,
+                vendor: product.vendor,
+                store: product.store,
+                retailer: product.retailer,
+                seller: product.seller,
+                allKeys: Object.keys(product)
+              });
+            }
+            
+            const finalPrice = product.currentPrice?.toString() || product.price;
+            
+            return {
+              id: product.id,
+              imageUrl: product.imageUrl || product.productImage || ImageService.getFallbackImage(product.productName || product.title),
+              title: product.productName || product.title,
+              price: finalPrice,
+              originalPrice: product.currentPrice || product.price, // Keep original numeric price
+              vendor: product.vendor || product.store || product.retailer || product.seller || 'Unknown',
+              targetPrice: product.targetPrice?.toString(),
+              expiresIn: product.expiresIn,
+              status: product.status || 'tracking',
+              url: product.productUrl || product.url,
+              extractedAt: product.extractedAt || product.createdAt,
+            };
+          });
         }
+        
+        // Always use real data from API, even if empty
+        setError(null); // Clear any previous errors
         setProducts(convertedProducts);
-        // Load stats
-        let statsData;
-        if (!window.chrome || !window.chrome.storage || convertedProducts === dummyProducts) {
-          // Dummy stats for fallback
-          statsData = {
-            totalProducts: dummyProducts.length,
-            trackingProducts: dummyProducts.filter(p => p.status === 'tracking').length,
-            completedProducts: dummyProducts.filter(p => p.status === 'completed').length,
-            totalSavings: 150, // Example static value
-          };
-        } else {
-          statsData = await ChromeStorageService.getStats();
-        }
-        setStats(statsData);
+        
+        // Calculate stats
+        const totalProducts = convertedProducts.length;
+        const trackingProducts = convertedProducts.filter(p => p.status === 'tracking').length;
+        const completedProducts = convertedProducts.filter(p => p.status === 'completed').length;
+        const totalSavings = convertedProducts.reduce((sum, p) => {
+          if (p.targetPrice && p.price) {
+            const currentPrice = parseFloat(p.price.replace(/[^0-9.]/g, ''));
+            const targetPrice = parseFloat(p.targetPrice.replace(/[^0-9.]/g, ''));
+            return sum + Math.max(0, currentPrice - targetPrice);
+          }
+          return sum;
+        }, 0);
+        
+        setStats({ totalProducts, trackingProducts, completedProducts, totalSavings });
       } catch (error) {
-        console.error('Failed to load products:', error);
-        setProducts(dummyProducts);
-        setStats({
-          totalProducts: dummyProducts.length,
-          trackingProducts: dummyProducts.filter(p => p.status === 'tracking').length,
-          completedProducts: dummyProducts.filter(p => p.status === 'completed').length,
-          totalSavings: 150,
-        });
+        console.error('Failed to load products from API:', error);
+        
+        // Check if this is a network/connection error or authentication error
+        const isNetworkError = error instanceof TypeError || 
+                              (error instanceof Error && error.message.includes('fetch')) ||
+                              (error instanceof Error && error.message.includes('network')) ||
+                              (error instanceof Error && error.message.includes('connection')) ||
+                              (error instanceof Error && error.message.includes('User not authenticated'));
+        
+        if (isNetworkError) {
+          // Network error - use dummy products as fallback
+          console.log('Network error detected, using dummy products as fallback');
+          setProducts([
+            {
+              id: '1',
+              imageUrl: ImageService.getFallbackImage('Sample Laptop'),
+              title: 'Sample Laptop',
+              price: '999.99',
+              originalPrice: 999.99,
+              vendor: 'TechStore',
+              targetPrice: '899.99',
+              expiresIn: '10 days',
+              status: 'tracking' as const,
+              url: 'https://example.com/laptop',
+              extractedAt: new Date().toISOString(),
+            },
+            {
+              id: '2',
+              imageUrl: ImageService.getFallbackImage('Wireless Headphones'),
+              title: 'Wireless Headphones',
+              price: '199.99',
+              originalPrice: 199.99,
+              vendor: 'AudioShop',
+              targetPrice: '149.99',
+              expiresIn: '5 days',
+              status: 'paused' as const,
+              url: 'https://example.com/headphones',
+              extractedAt: new Date().toISOString(),
+            },
+            {
+              id: '3',
+              imageUrl: ImageService.getFallbackImage('Modern Sofa'),
+              title: 'Modern Sofa',
+              price: '499.99',
+              originalPrice: 499.99,
+              vendor: 'HomeStore',
+              targetPrice: '399.99',
+              expiresIn: '20 days',
+              status: 'completed' as const,
+              url: 'https://example.com/sofa',
+              extractedAt: new Date().toISOString(),
+            },
+            {
+              id: '4',
+              imageUrl: ImageService.getFallbackImage('Gaming Monitor'),
+              title: 'Gaming Monitor',
+              price: '299.99',
+              originalPrice: 299.99,
+              vendor: 'GameStore',
+              targetPrice: '349.99',
+              expiresIn: '15 days',
+              status: 'tracking' as const,
+              url: 'https://example.com/monitor',
+              extractedAt: new Date().toISOString(),
+            },
+          ]);
+          setStats({
+            totalProducts: 4,
+            trackingProducts: 2,
+            completedProducts: 1,
+            totalSavings: 150,
+          });
+          setError(error instanceof Error && error.message.includes('User not authenticated') 
+            ? 'Authentication issue. Showing demo data. Please log in again.' 
+            : 'Network connection issue. Showing demo data.');
+        } else {
+          // API error - show empty state
+          setProducts([]);
+          setError(error instanceof Error ? error.message : 'Failed to load products');
+          setStats({
+            totalProducts: 0,
+            trackingProducts: 0,
+            completedProducts: 0,
+            totalSavings: 0,
+          });
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadProducts();
-
-    // Listen for changes from the Chrome extension
-    ChromeStorageService.onStorageChange((extractedProducts) => {
-      const convertedProducts: Product[] = extractedProducts.map(product => ({
-        id: product.id,
-        imageUrl: product.imageUrl || ImageService.getFallbackImage(product.product_name), // Use extracted image or fallback
-        title: product.product_name,
-        price: product.price,
-        vendor: product.vendor || 'Unknown',
-        targetPrice: product.targetPrice,
-        expiresIn: product.expiresIn,
-        status: product.status,
-        url: product.url,
-        extractedAt: product.extractedAt,
-      }));
-      
-      setProducts(convertedProducts);
-    });
   }, []);
-
-
 
   // Filter products based on status and deal status
   const filteredProducts = useMemo(() => {
@@ -211,30 +273,72 @@ export default function Dashboard() {
 
     // Apply deals filter (products where current price <= target price)
     if (filter === 'deals') {
-      filtered = filtered.filter(product => 
-        product.targetPrice && 
-        parseFloat(product.price.replace(/[^0-9.]/g, '')) <= parseFloat(product.targetPrice.replace(/[^0-9.]/g, ''))
-      );
+      filtered = filtered.filter(product => {
+        try {
+          if (!product.targetPrice || !product.price) return false;
+          const currentPrice = parseFloat(product.price.replace(/[^0-9.]/g, ''));
+          const targetPrice = parseFloat(product.targetPrice.replace(/[^0-9.]/g, ''));
+          return !isNaN(currentPrice) && !isNaN(targetPrice) && currentPrice <= targetPrice;
+        } catch (error) {
+          console.error('Error parsing prices for deals filter in useMemo:', error);
+          return false;
+        }
+      });
     }
 
     // Convert Product[] to ExtractedProduct[] for the search service
-    const extractedProducts = filtered.map(product => ({
-      id: product.id,
-      product_name: product.title,
-      price: product.price,
-      vendor: product.vendor,
-      targetPrice: product.targetPrice,
-      expiresIn: product.expiresIn,
-      status: product.status,
-      url: product.url,
-      extractedAt: product.extractedAt,
-      brand: '', // Add default values for missing fields
-      color: '',
-      capacity: '',
-      hasAlert: productHasAlert(product.id), // Add hasAlert property
-    }));
+    const extractedProducts = filtered.map(product => {
+      try {
+        // Validate product has required fields
+        if (!product || !product.id) {
+          console.warn('Invalid product data:', product);
+          return null;
+        }
+        
+        const existingAlert = getExistingAlert(product.id);
+        const hasAlert = productHasAlert(product.id);
+        
+        return {
+          id: product.id,
+          product_name: product.title || 'Unknown Product',
+          price: product.price || '0',
+          originalPrice: product.originalPrice, // Preserve originalPrice for API calls
+          vendor: product.vendor || 'Unknown',
+          targetPrice: existingAlert ? existingAlert.targetPrice?.toString() : product.targetPrice,
+          expiresIn: product.expiresIn,
+          status: product.status || 'tracking',
+          url: product.url || '#',
+          extractedAt: product.extractedAt || new Date().toISOString(),
+          brand: '', // Add default values for missing fields
+          color: '',
+          capacity: '',
+          hasAlert: hasAlert, // Add hasAlert property
+        };
+      } catch (error) {
+        console.error('Error processing product:', product.id, error);
+        // Return a safe fallback
+        return {
+          id: product.id,
+          product_name: product.title || 'Unknown Product',
+          price: product.price || '0',
+          originalPrice: product.originalPrice, // Preserve originalPrice for API calls
+          vendor: product.vendor || 'Unknown',
+          targetPrice: product.targetPrice,
+          expiresIn: product.expiresIn,
+          status: product.status || 'tracking',
+          url: product.url || '#',
+          extractedAt: product.extractedAt || new Date().toISOString(),
+          brand: '',
+          color: '',
+          capacity: '',
+          hasAlert: false,
+        };
+      }
+    });
 
-    return SearchService.filterProducts(extractedProducts, debouncedFilters);
+    // Filter out null values and pass to search service
+    const validProducts = extractedProducts.filter(product => product !== null) as any[];
+    return SearchService.filterProducts(validProducts, debouncedFilters);
   }, [products, debouncedFilters, filter, alerts]); // Add alerts to dependencies
 
   // Check if smart sorting is active
@@ -243,11 +347,6 @@ export default function Dashboard() {
   const handleCreateAlert = (product: any) => {
     setSelectedProduct(product);
     setShowCreateAlertModal(true);
-  };
-
-  // Helper function to get existing alert for a product
-  const getExistingAlert = (productId: string) => {
-    return alerts.find(alert => alert.productId === productId && alert.status === 'active');
   };
 
   const handleViewProduct = (url: string) => {
@@ -273,10 +372,17 @@ export default function Dashboard() {
       case 'completed':
         return stats.completedProducts;
       case 'deals':
-        return products.filter(product => 
-          product.targetPrice && 
-          parseFloat(product.price.replace(/[^0-9.]/g, '')) <= parseFloat(product.targetPrice.replace(/[^0-9.]/g, ''))
-        ).length;
+        return products.filter(product => {
+          try {
+            if (!product.targetPrice || !product.price) return false;
+            const currentPrice = parseFloat(product.price.replace(/[^0-9.]/g, ''));
+            const targetPrice = parseFloat(product.targetPrice.replace(/[^0-9.]/g, ''));
+            return !isNaN(currentPrice) && !isNaN(targetPrice) && currentPrice <= targetPrice;
+          } catch (error) {
+            console.error('Error parsing prices for deals filter:', error);
+            return false;
+          }
+        }).length;
       default:
         return 0;
     }
@@ -284,49 +390,33 @@ export default function Dashboard() {
 
   return (
     <main className="p-6 flex-1 bg-white">
+      {/* Network Error Warning Banner */}
+      {error && error.includes('Network connection issue') && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-yellow-400">⚠️</span>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">Demo Mode</h3>
+              <p className="text-sm text-yellow-700 mt-1">
+                Network connection issue detected. You're viewing demo data. Alerts created with demo products will not work.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="mb-6">
         {/* Header with Alert Icon and Savings */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold">Product Tracker</h1>
             <div className="text-sm text-green-600 font-medium">
-              Total Saved: <span className="font-bold">${stats.totalSavings}</span>
+              Total Saved: <span className="font-bold">{formatPrice(stats.totalSavings)}</span>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            {/* Development buttons - only show in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="flex space-x-2 mr-4">
-                <button
-                  onClick={() => {
-                    setupMockAlerts();
-                    // Force a re-render to update the UI
-                    window.location.reload();
-                  }}
-                  className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                  title="Set up mock alerts for testing"
-                >
-                  Setup Alerts
-                </button>
-                <button
-                  onClick={() => {
-                    MockAlertService.forceCreateDashboardAlerts();
-                    window.location.reload();
-                  }}
-                  className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                  title="Force create dashboard alerts"
-                >
-                  Force Dashboard Alerts
-                </button>
-                <button
-                  onClick={getAlertStatus}
-                  className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-                  title="Check alert status"
-                >
-                  Alert Status
-                </button>
-              </div>
-            )}
             <button
               onClick={() => setShowAlertModal(true)}
               className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
@@ -405,25 +495,97 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Empty State - No Products */}
+      {!loading && products.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">📦</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Products Available
+          </h3>
+          <p className="text-gray-600 mb-6">
+            {error && error.includes('Authentication issue') ? 
+              "Authentication issue. Please log in again to access your data." :
+              error && error.includes('Network connection issue') ? 
+                "Network connection issue. Showing demo data. Please check your connection and try again." :
+                error ? 
+                  "Unable to load products from the database. Please check your connection and try again." :
+                  "No products have been added to the database yet."
+            }
+          </p>
+          {error && (
+            <div className="space-x-2">
+              {error.includes('Authentication issue') ? (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Go to Login
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Retry
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Search Results */}
       <SearchResults
-        products={products.map(product => ({
-          id: product.id,
-          product_name: product.title,
-          price: product.price,
-          vendor: product.vendor,
-          targetPrice: product.targetPrice,
-          previousPrice: product.previousPrice,
-          originalPrice: product.originalPrice,
-          expiresIn: product.expiresIn,
-          status: product.status,
-          url: product.url,
-          extractedAt: product.extractedAt,
-          brand: '',
-          color: '',
-          capacity: '',
-          hasAlert: productHasAlert(product.id),
-        }))}
+        products={products.map(product => {
+          try {
+            const existingAlert = getExistingAlert(product.id);
+            const finalTargetPrice = existingAlert ? existingAlert.targetPrice?.toString() : product.targetPrice;
+            
+            if (process.env.NODE_ENV === 'development' && product.id === '858') {
+              console.log(`🎯 Product ${product.id} target price mapping:`, {
+                productTargetPrice: product.targetPrice,
+                alertTargetPrice: existingAlert?.targetPrice,
+                finalTargetPrice: finalTargetPrice,
+                hasAlert: productHasAlert(product.id)
+              });
+            }
+            
+            return {
+              id: product.id,
+              product_name: product.title,
+              price: product.price,
+              originalPrice: product.originalPrice, // Preserve originalPrice for API calls
+              vendor: product.vendor,
+              targetPrice: finalTargetPrice,
+              expiresIn: product.expiresIn,
+              status: product.status,
+              url: product.url,
+              extractedAt: product.extractedAt,
+              brand: '',
+              color: '',
+              capacity: '',
+              hasAlert: productHasAlert(product.id),
+            };
+          } catch (error) {
+            console.error('Error processing product for SearchResults:', product.id, error);
+            return {
+              id: product.id,
+              product_name: product.title || 'Unknown Product',
+              price: product.price || '0',
+              originalPrice: product.originalPrice, // Preserve originalPrice for API calls
+              vendor: product.vendor || 'Unknown',
+              targetPrice: product.targetPrice,
+              expiresIn: product.expiresIn,
+              status: product.status || 'tracking',
+              url: product.url || '#',
+              extractedAt: product.extractedAt || new Date().toISOString(),
+              brand: '',
+              color: '',
+              capacity: '',
+              hasAlert: false,
+            };
+          }
+        })}
         filteredProducts={filteredProducts}
         loading={loading}
         onCreateAlert={handleCreateAlert}
@@ -438,13 +600,34 @@ export default function Dashboard() {
           setShowCreateAlertModal(false);
           setSelectedProduct(null);
         }}
-        productData={selectedProduct ? {
-          id: selectedProduct.id,
-          name: selectedProduct.title,
-          url: selectedProduct.url,
-          image: selectedProduct.imageUrl,
-          currentPrice: parseFloat(selectedProduct.price.replace(/[^0-9.]/g, '')),
-        } : undefined}
+        productData={selectedProduct ? (() => {
+          // Use originalPrice if available, otherwise parse the formatted price
+          const currentPrice = selectedProduct.originalPrice || parseFloat(selectedProduct.price.replace(/[^0-9.]/g, ''));
+          
+          // Use the SAME target price logic as ProductCard for consistency
+          const existingAlert = getExistingAlert(selectedProduct.id);
+          const finalTargetPrice = existingAlert ? existingAlert.targetPrice?.toString() : selectedProduct.targetPrice;
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🔍 Modal price debugging:', {
+              originalPrice: selectedProduct.originalPrice,
+              formattedPrice: selectedProduct.price,
+              parsedPrice: currentPrice,
+              productTitle: selectedProduct.title,
+              productTargetPrice: selectedProduct.targetPrice,
+              alertTargetPrice: existingAlert?.targetPrice,
+              finalTargetPrice: finalTargetPrice
+            });
+          }
+          return {
+            id: selectedProduct.id,
+            name: selectedProduct.title,
+            url: selectedProduct.url,
+            image: selectedProduct.imageUrl,
+            currentPrice: currentPrice,
+            targetPrice: finalTargetPrice, // Use same logic as ProductCard for consistency
+          };
+        })() : undefined}
         existingAlert={selectedProduct ? getExistingAlert(selectedProduct.id) : undefined}
       />
 
@@ -454,6 +637,13 @@ export default function Dashboard() {
         onClose={() => setShowAlertModal(false)}
         alertId="all"
         alertName="All Alerts"
+      />
+      
+      {/* Debug Info (Development Only) */}
+      <AlertDebugInfo 
+        products={products}
+        alerts={alerts}
+        isVisible={process.env.NODE_ENV === 'development'}
       />
     </main>
   );

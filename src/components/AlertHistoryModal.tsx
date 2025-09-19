@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AlertHistory } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
 import Modal from './ui/Modal';
+import { formatPrice, formatPercentage } from '../utils/priceFormatting';
 
 interface AlertHistoryModalProps {
   isOpen: boolean;
@@ -88,13 +89,13 @@ export default function AlertHistoryModal({ isOpen, onClose, alertId, alertName 
                 {entry.oldPrice && entry.newPrice && (
                   <div className="flex items-center space-x-4 mt-2 text-sm">
                     <span className="text-red-600">
-                      ${entry.oldPrice.toFixed(2)} → ${entry.newPrice.toFixed(2)}
+                      {formatPrice(entry.oldPrice)} → {formatPrice(entry.newPrice)}
                     </span>
                     {entry.priceChangePercentage && (
                       <span className={`font-medium ${
                         entry.priceChangePercentage > 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {entry.priceChangePercentage > 0 ? '+' : ''}{entry.priceChangePercentage.toFixed(1)}%
+                        {entry.priceChangePercentage > 0 ? '+' : ''}{formatPercentage(entry.priceChangePercentage)}%
                       </span>
                     )}
                   </div>

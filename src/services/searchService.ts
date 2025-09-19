@@ -1,4 +1,5 @@
 import { ExtractedProduct } from './chromeStorage';
+import { apiService } from './api';
 
 export interface SearchFilters {
   query: string;
@@ -14,7 +15,35 @@ export interface SearchFilters {
 
 export class SearchService {
   /**
-   * Filter products based on search criteria
+   * Get products from API with optional filters
+   */
+  static async getProducts(filters?: SearchFilters) {
+    return await apiService.getProducts(filters);
+  }
+
+  /**
+   * Get vendors from API
+   */
+  static async getVendors() {
+    return await apiService.getVendors();
+  }
+
+  /**
+   * Get search suggestions from API
+   */
+  static async getSearchSuggestions(query: string) {
+    return await apiService.getSearchSuggestions(query);
+  }
+
+  /**
+   * Get search stats from API
+   */
+  static async getStats() {
+    return await apiService.getSearchStats();
+  }
+
+  /**
+   * Filter products based on search criteria (client-side filtering)
    */
   static filterProducts(products: ExtractedProduct[], filters: SearchFilters): ExtractedProduct[] {
     let filtered = [...products];

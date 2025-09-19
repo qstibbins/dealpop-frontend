@@ -2,6 +2,7 @@ import { useImage } from '../hooks/useImage';
 import StatusBadge from './ui/StatusBadge';
 import PriceDisplay from './PriceDisplay';
 import PriceComparisonModal from './PriceComparisonModal';
+import { formatPrice } from '../utils/priceFormatting';
 import { useState } from 'react';
 
 type ProductCardProps = {
@@ -65,6 +66,16 @@ export default function ProductCard({
       url,
       extractedAt,
     };
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 ProductCard passing to modal:', {
+        productId: id,
+        productTitle: title,
+        price: price,
+        targetPrice: targetPrice
+      });
+    }
+    
     onCreateAlert(product);
   };
 
