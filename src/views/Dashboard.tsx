@@ -617,7 +617,7 @@ export default function Dashboard() {
         isSmartSortingActive={isSmartSortingActive}
       />
 
-      {/* Settings Section */}
+      {/* Settings Section - Updated */}
       <div className="mt-12">
         <h1 className="text-2xl font-bold mb-6">Settings</h1>
 

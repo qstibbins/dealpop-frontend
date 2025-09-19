@@ -81,11 +81,9 @@ export default function ProductCard({
     <>
       <div className="bg-white shadow rounded-lg p-4 w-full max-w-xs hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between mb-2">
-          {hasAlert && (
-            <span className="px-2 py-1 text-xs font-bold text-white bg-pink-500 rounded-full">
-              DealPop
-            </span>
-          )}
+          <span className="px-2 py-1 text-xs font-bold text-white bg-pink-500 rounded-full">
+            DealPop
+          </span>
           {expiresIn && (
             <span className="text-xs text-gray-500 font-medium">
               Tracker ends in {expiresIn}
