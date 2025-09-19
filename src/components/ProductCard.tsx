@@ -81,7 +81,11 @@ export default function ProductCard({
     <>
       <div className="bg-white shadow rounded-lg p-4 w-full max-w-xs hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between mb-2">
-          <StatusBadge status={status} size="sm" />
+          {hasAlert && (
+            <span className="px-2 py-1 text-xs font-bold text-white bg-pink-500 rounded-full">
+              DealPop
+            </span>
+          )}
           {expiresIn && (
             <span className="text-xs text-gray-500 font-medium">
               Tracker ends in {expiresIn}
@@ -129,22 +133,13 @@ export default function ProductCard({
         <p className="text-gray-600 text-sm mb-2">{vendor}</p>
         
         {/* Current Price and Target Price Display */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <p className="text-xs text-gray-500">Current Price</p>
-            <div className="flex items-center space-x-2">
-              <p className="font-bold text-gray-900">{formatPrice(price)}</p>
-              {targetPrice && parseFloat(price.replace(/[^0-9.]/g, '')) <= parseFloat(targetPrice.replace(/[^0-9.]/g, '')) && (
-                <span className="px-2 py-1 text-xs font-bold text-green-600 bg-green-100 rounded-full">
-                  DEAL
-                </span>
-              )}
-            </div>
+        <div className="mb-3">
+          <div className="mb-2">
+            <p className="text-xs text-gray-500">Current Price {formatPrice(price)}</p>
           </div>
           {targetPrice && (
             <div>
-              <p className="text-xs text-gray-500">Target Price</p>
-              <p className="font-semibold text-blue-600">{formatPrice(targetPrice)}</p>
+              <p className="text-xs text-gray-500">Target Price {formatPrice(targetPrice)}</p>
             </div>
           )}
         </div>
@@ -156,7 +151,7 @@ export default function ProductCard({
               onClick={handleCreateAlert}
               className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
             >
-              {hasAlert ? 'Edit Alert' : 'Create Alert'}
+              Edit Alert
             </button>
           )}
           {onViewProduct && url && (
@@ -164,9 +159,14 @@ export default function ProductCard({
               onClick={handleViewProduct}
               className="flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
             >
-              View Product
+              Go to Site
             </button>
           )}
+        </div>
+        
+        {/* Status Badge */}
+        <div className="mt-2">
+          <StatusBadge status={status} size="sm" />
         </div>
       </div>
     </>
