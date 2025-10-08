@@ -38,7 +38,6 @@ export default function ProductCard({
   extractedAt,
   onCreateAlert,
   onViewProduct,
-  hasAlert = false,
 }: ProductCardProps) {
   const [showPriceModal, setShowPriceModal] = useState(false);
   const { imageState, currentImageUrl, retry } = useImage(imageUrl, title, {
@@ -46,9 +45,19 @@ export default function ProductCard({
     preload: false,
   });
 
+  // Check if target price threshold has been reached
+  const isTargetPriceReached = () => {
+    if (!targetPrice) return false;
+    
+    // Parse prices to numbers for comparison
+    const currentPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
+    const target = parseFloat(targetPrice.replace(/[^0-9.]/g, ''));
+    
+    // Target price is reached when current price is less than or equal to target
+    return currentPrice <= target;
+  };
 
-
-
+  const targetReached = isTargetPriceReached();
 
   const handleCreateAlert = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -87,9 +96,13 @@ export default function ProductCard({
 
   return (
     <>
-      <div className="bg-white shadow rounded-lg p-4 w-full max-w-xs hover:shadow-md transition-shadow">
+      <div className={`bg-white shadow rounded-lg p-4 w-full h-full flex flex-col hover:shadow-md transition-shadow ${
+        targetReached ? 'border-2 border-red-500' : ''
+      }`}>
         <div className="flex items-center justify-between mb-2">
-          <StatusBadge status={status} size="sm" />
+          <span className="px-2 py-1 text-xs font-bold text-white bg-pink-500 rounded-full">
+            DealPop
+          </span>
           {expiresIn && (
             <span className="text-xs text-gray-500 font-medium">
               Tracker ends in {expiresIn}
@@ -98,7 +111,7 @@ export default function ProductCard({
         </div>
         
         {/* Image Container with Loading and Error States */}
-        <div className="h-32 w-full mb-3 relative bg-gray-100 rounded-lg overflow-hidden">
+        <div className="h-40 w-full mb-3 relative bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
           {imageState === 'loading' && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -132,40 +145,37 @@ export default function ProductCard({
           />
         </div>
         
-        <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
+        <h3 className="text-lg font-semibold mb-1 line-clamp-2 flex-shrink-0">{title}</h3>
         
-        <p className="text-gray-600 text-sm mb-2">{vendor}</p>
+        <p className="text-gray-600 text-sm mb-2 flex-shrink-0">{vendor}</p>
         
-        {/* Enhanced Price Display */}
-        <div className="mb-3">
-          <div 
-            className="cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
-            onClick={() => setShowPriceModal(true)}
-            title="Click for detailed price analysis"
-          >
-            <PriceDisplay
-              currentPrice={price}
-              targetPrice={targetPrice}
-              previousPrice={previousPrice}
-              originalPrice={originalPrice}
-              showTrend={true}
-              showSavings={true}
-              compact={true}
-            />
-            <div className="text-xs text-blue-600 text-center mt-1">
-              Click for detailed analysis →
+        {/* Price Display */}
+        <div className="mb-3 flex-shrink-0">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-left">
+              <p className="text-xs text-gray-500">Current Price</p>
+              <p className="text-lg font-bold">${price}</p>
             </div>
+            {targetPrice && (
+              <div className="text-left">
+                <p className="text-xs text-gray-500">Target Price</p>
+                <p className="text-lg font-bold text-blue-600">${targetPrice}</p>
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Spacer to push buttons to bottom */}
+        <div className="flex-grow"></div>
+
         {/* Create/Edit Alert and View Product Buttons */}
-        <div className="flex space-x-2 relative z-20">
+        <div className="flex space-x-2 relative z-20 mb-2 flex-shrink-0">
           {onCreateAlert && (
             <button
               onClick={handleCreateAlert}
               className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
             >
-              {hasAlert ? 'Edit Alert' : 'Create Alert'}
+              Edit Alert
             </button>
           )}
           {onViewProduct && url && (
@@ -173,9 +183,14 @@ export default function ProductCard({
               onClick={handleViewProduct}
               className="flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
             >
-              View Product
+              Go to Site
             </button>
           )}
+        </div>
+        
+        {/* Status Badge */}
+        <div className="flex-shrink-0">
+          <StatusBadge status={status} size="sm" />
         </div>
       </div>
 

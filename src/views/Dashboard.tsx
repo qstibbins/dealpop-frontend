@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../services/api';
+import { apiAdapter } from '../services/apiAdapter';
 import { SearchService } from '../services/searchService';
 import { ImageService } from '../services/imageService';
 import SearchFiltersComponent from '../components/SearchFilters';
@@ -13,6 +13,7 @@ import { useAlerts } from '../contexts/AlertContext';
 import { useAuth } from '../contexts/AuthContext';
 import AlertDebugInfo from '../components/AlertDebugInfo';
 import { formatPrice } from '../utils/priceFormatting';
+import { isStaticMode } from '../config/staticMode';
 
 interface Product {
   id: string;
@@ -109,7 +110,7 @@ export default function Dashboard() {
     const loadProducts = async () => {
       try {
         setLoading(true);
-        const response = await apiService.getProducts();
+        const response = await apiAdapter.getProducts();
         const productsData = (response as any).products || response;
         
         // Convert API response to Product format
@@ -166,7 +167,17 @@ export default function Dashboard() {
           return sum;
         }, 0);
         
-        setStats({ totalProducts, trackingProducts, completedProducts, totalSavings });
+        // Use realistic stats for demo mode
+        if (isStaticMode()) {
+          setStats({
+            totalProducts: 12,
+            trackingProducts: 8,
+            completedProducts: 2,
+            totalSavings: 920.00, // Match the UI
+          });
+        } else {
+          setStats({ totalProducts, trackingProducts, completedProducts, totalSavings });
+        }
       } catch (error) {
         console.error('Failed to load products from API:', error);
         
@@ -354,6 +365,13 @@ export default function Dashboard() {
   };
 
   const getFilterButtonClass = (filterValue: typeof filter) => {
+    if (filterValue === 'deals') {
+      return `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+        filter === filterValue
+          ? 'bg-pink-500 text-white'
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      }`;
+    }
     return `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
       filter === filterValue
         ? 'bg-blue-600 text-white'
@@ -390,6 +408,21 @@ export default function Dashboard() {
 
   return (
     <main className="p-6 flex-1 bg-white">
+      {/* Demo Mode Banner */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <span className="text-blue-400">🎯</span>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-blue-800">Demo Mode</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              This is a static preview with realistic mock data.
+            </p>
+          </div>
+        </div>
+      </div>
+      
       {/* Network Error Warning Banner */}
       {error && error.includes('Network connection issue') && (
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -407,7 +440,8 @@ export default function Dashboard() {
         </div>
       )}
       
-      <div className="mb-6">
+      {/* Product Tracker Section */}
+      <div className="mb-12">
         {/* Header with Alert Icon and Savings */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
@@ -446,28 +480,28 @@ export default function Dashboard() {
             All ({getFilterCount('all')})
           </button>
           <button
-            onClick={() => setFilter('tracking')}
-            className={getFilterButtonClass('tracking')}
+            onClick={() => setFilter('deals')}
+            className={getFilterButtonClass('deals')}
           >
-            Tracking ({getFilterCount('tracking')})
-          </button>
-          <button
-            onClick={() => setFilter('paused')}
-            className={getFilterButtonClass('paused')}
-          >
-            Paused ({getFilterCount('paused')})
+            DealPop ({getFilterCount('deals')})
           </button>
           <button
             onClick={() => setFilter('completed')}
             className={getFilterButtonClass('completed')}
           >
-            Completed ({getFilterCount('completed')})
+            Expired ({getFilterCount('completed')})
           </button>
           <button
-            onClick={() => setFilter('deals')}
-            className={getFilterButtonClass('deals')}
+            onClick={() => setFilter('tracking')}
+            className={getFilterButtonClass('tracking')}
           >
-            Deals ({getFilterCount('deals')})
+            Active ({getFilterCount('tracking')})
+          </button>
+          <button
+            onClick={() => setFilter('paused')}
+            className={getFilterButtonClass('paused')}
+          >
+            Completed ({getFilterCount('paused')})
           </button>
         </div>
 

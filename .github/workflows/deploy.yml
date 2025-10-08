@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ feat/mock-data ]
+  pull_request:
+    branches: [ feat/mock-data ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Clean and install dependencies
+      run: |
+        rm -rf node_modules package-lock.json
+        npm install
+        npm rebuild
+      
+    - name: Build
+      run: npm run build
+      
+    - name: Add .nojekyll file
+      run: touch dist/.nojekyll
+      
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/feat/mock-data'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
+        force_orphan: true
+        enable_jekyll: false
+        
+    - name: Build for PR
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "Building for PR preview..."
+        npm run build
+        echo "Build completed successfully"

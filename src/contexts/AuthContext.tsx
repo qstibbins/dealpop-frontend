@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { AuthService } from '../services/firebase';
+import { authAdapter } from '../services/authAdapter';
 import { abTestAnalytics } from '../components/ABTestAnalytics';
 
 interface AuthContextType {
@@ -32,37 +32,76 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = AuthService.onAuthStateChanged((user) => {
+    const unsubscribe = authAdapter.onAuthStateChanged((user) => {
       setUser(user);
       setLoading(false);
       
       // Sync stored AB test events when user logs in
       if (user) {
         abTestAnalytics.syncStoredEvents();
+        
+        // Check if this is from the extension and send auth data back
+        handleExtensionAuth(user);
       }
     });
 
     return () => unsubscribe();
   }, []);
 
+  // Handle extension authentication communication
+  const handleExtensionAuth = async (user: User) => {
+    try {
+      // Check if this is from the extension
+      const urlParams = new URLSearchParams(window.location.search);
+      const isFromExtension = urlParams.get('extension') === 'true';
+      
+      if (isFromExtension && window.chrome && (window.chrome as any).runtime) {
+        // Get the Firebase ID token
+        const token = await user.getIdToken();
+        
+        // Send auth data to extension
+        (window.chrome as any).runtime.sendMessage({
+          type: 'EXTENSION_AUTH_SUCCESS',
+          user: {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL
+          },
+          token: token
+        }, (response: any) => {
+          if (response && response.success) {
+            // Show success message and close tab after a delay
+            setTimeout(() => {
+              alert('Extension connected successfully! You can close this tab.');
+              window.close();
+            }, 1000);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error handling extension auth:', error);
+    }
+  };
+
   const signInWithGoogle = async () => {
-    return await AuthService.signInWithGoogle();
+    return await authAdapter.signInWithGoogle();
   };
 
   const signInWithFacebook = async () => {
-    return await AuthService.signInWithFacebook();
+    return await authAdapter.signInWithFacebook();
   };
 
   const signInWithEmail = async (email: string, password: string) => {
-    return await AuthService.signInWithEmail(email, password);
+    return await authAdapter.signInWithEmail(email, password);
   };
 
   const createAccountWithEmail = async (email: string, password: string) => {
-    return await AuthService.createAccountWithEmail(email, password);
+    return await authAdapter.createAccountWithEmail(email, password);
   };
 
   const signOut = async () => {
-    return await AuthService.signOut();
+    return await authAdapter.signOut();
   };
 
   const value = {
