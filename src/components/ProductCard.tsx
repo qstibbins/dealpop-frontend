@@ -1,9 +1,5 @@
 import { useImage } from '../hooks/useImage';
 import StatusBadge from './ui/StatusBadge';
-import PriceDisplay from './PriceDisplay';
-import PriceComparisonModal from './PriceComparisonModal';
-import { formatPrice } from '../utils/priceFormatting';
-import { useState } from 'react';
 
 type ProductCardProps = {
   id: string;
@@ -30,8 +26,6 @@ export default function ProductCard({
   price,
   vendor,
   targetPrice,
-  previousPrice,
-  originalPrice,
   expiresIn,
   status = 'tracking',
   url,
@@ -39,7 +33,6 @@ export default function ProductCard({
   onCreateAlert,
   onViewProduct,
 }: ProductCardProps) {
-  const [showPriceModal, setShowPriceModal] = useState(false);
   const { imageState, currentImageUrl, retry } = useImage(imageUrl, title, {
     optimize: true,
     preload: false,
@@ -193,22 +186,6 @@ export default function ProductCard({
           <StatusBadge status={status} size="sm" />
         </div>
       </div>
-
-      {/* Price Comparison Modal */}
-      <PriceComparisonModal
-        isOpen={showPriceModal}
-        onClose={() => setShowPriceModal(false)}
-        product={{
-          id,
-          title,
-          currentPrice: price,
-          targetPrice,
-          previousPrice,
-          originalPrice,
-          vendor,
-          url,
-        }}
-      />
     </>
   );
 }

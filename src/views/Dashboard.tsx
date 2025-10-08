@@ -7,7 +7,6 @@ import SearchFiltersComponent from '../components/SearchFilters';
 import SearchResults from '../components/SearchResults';
 import CreateAlertModal from '../components/CreateAlertModal';
 import AlertHistoryModal from '../components/AlertHistoryModal';
-import PriceSummary from '../components/PriceSummary';
 import { useSearch } from '../hooks/useSearch';
 import { useAlerts } from '../contexts/AlertContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,8 +22,6 @@ interface Product {
   originalPrice?: number; // Keep original numeric price for API calls
   vendor: string;
   targetPrice?: string;
-  previousPrice?: string;
-  originalPrice?: string;
   expiresIn?: string;
   status: 'tracking' | 'paused' | 'completed';
   url: string;
@@ -466,11 +463,6 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Enhanced Price Summary */}
-        {products.length > 0 && (
-          <PriceSummary products={products} className="mb-6" />
-        )}
-
         {/* Filter Tabs */}
         <div className="flex space-x-2 mb-6">
           <button
@@ -515,7 +507,6 @@ export default function Dashboard() {
             price: product.price,
             vendor: product.vendor,
             targetPrice: product.targetPrice,
-            previousPrice: product.previousPrice,
             originalPrice: product.originalPrice,
             expiresIn: product.expiresIn,
             status: product.status,

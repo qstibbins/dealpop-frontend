@@ -23,9 +23,15 @@ export interface PriceTrend {
 }
 
 /**
- * Extract numeric price from string (removes currency symbols, commas, etc.)
+ * Extract numeric price from string or number (removes currency symbols, commas, etc.)
  */
-export function extractPrice(priceString: string): number {
+export function extractPrice(priceString: string | number): number {
+  if (typeof priceString === 'number') {
+    return priceString;
+  }
+  if (typeof priceString !== 'string') {
+    return 0;
+  }
   const numericPrice = priceString.replace(/[^0-9.]/g, '');
   return parseFloat(numericPrice) || 0;
 }
