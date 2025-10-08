@@ -1,6 +1,5 @@
 import { useImage } from '../hooks/useImage';
 import StatusBadge from './ui/StatusBadge';
-import { formatPrice } from '../utils/priceFormatting';
 
 type ProductCardProps = {
   id: string;
@@ -31,7 +30,6 @@ export default function ProductCard({
   extractedAt,
   onCreateAlert,
   onViewProduct,
-  hasAlert = false,
 }: ProductCardProps) {
   const { imageState, currentImageUrl, retry } = useImage(imageUrl, title, {
     optimize: true,
@@ -45,17 +43,6 @@ export default function ProductCard({
     // Parse prices to numbers for comparison
     const currentPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
     const target = parseFloat(targetPrice.replace(/[^0-9.]/g, ''));
-    
-    // Debug logging
-    if (process.env.NODE_ENV === 'development' && title.includes('Anker')) {
-      console.log('🔍 Price comparison for', title, {
-        rawPrice: price,
-        rawTargetPrice: targetPrice,
-        parsedCurrentPrice: currentPrice,
-        parsedTargetPrice: target,
-        shouldShowRedBorder: currentPrice <= target
-      });
-    }
     
     // Target price is reached when current price is less than or equal to target
     return currentPrice <= target;

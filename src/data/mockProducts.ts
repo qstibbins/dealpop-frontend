@@ -55,8 +55,8 @@ export const mockProducts: ExtractedProduct[] = [
   {
     id: '4',
     product_name: 'Anker PowerCore 26800 Power Bank',
-    price: '49.99',
-    originalPrice: 59.99,
+    price: '39.99',  // Reduced from 49.99 to be below target
+    originalPrice: 39.99,
     color: 'Black',
     brand: 'Anker',
     capacity: '26800mAh',
@@ -106,8 +106,8 @@ export const mockProducts: ExtractedProduct[] = [
   {
     id: '7',
     product_name: 'Apple Watch Series 9',
-    price: '399.00',
-    originalPrice: 399.00,
+    price: '329.00',  // Reduced from 399.00 to be below target of 349.00
+    originalPrice: 329.00,
     color: 'Midnight',
     brand: 'Apple',
     capacity: '45mm',
