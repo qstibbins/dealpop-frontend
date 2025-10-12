@@ -71,9 +71,11 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
           apiAdapter.getUserPreferences(),
         ]);
 
-        // Handle backend response format (from FRONTEND_INTEGRATION_GUIDE.md)
-        const alertsData = (alertsResponse as any).success ? (alertsResponse as any).alerts : alertsResponse;
-        const preferencesData = (preferencesResponse as any).success ? (preferencesResponse as any).preferences : preferencesResponse;
+        // Handle backend response format (actual backend spec)
+        // GET /api/alerts returns direct array
+        const alertsData = alertsResponse;
+        // GET /api/users/preferences returns {preferences: {...}}
+        const preferencesData = (preferencesResponse as any).preferences || preferencesResponse;
 
         // Transform backend alert format to frontend format
         const transformedAlerts = Array.isArray(alertsData) ? alertsData.map((alert: any) => ({
@@ -125,34 +127,36 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
       };
       
       const response = await apiAdapter.createAlert(alertDataWithUserId);
-      const backendAlert = (response as any).success ? (response as any).alert : response;
       
-      // Transform backend response to frontend format
+      // POST /api/alerts returns {success: true, id: 456} - not full alert object
+      // We need to create the alert object from the original data + returned ID
+      const alertId = (response as any).id;
+      
       const newAlert = {
-        id: backendAlert.id,
-        userId: backendAlert.user_id,
-        productId: backendAlert.product_id,
-        productName: backendAlert.product_name,
-        productUrl: backendAlert.product_url,
-        productImage: backendAlert.product_image_url,
-        currentPrice: backendAlert.current_price,
-        targetPrice: backendAlert.target_price,
-        alertType: backendAlert.alert_type,
-        status: backendAlert.status,
-        notificationPreferences: backendAlert.notification_preferences || {
+        id: alertId,
+        userId: alertDataWithUserId.userId,
+        productId: alertDataWithUserId.productId,
+        productName: alertDataWithUserId.productName,
+        productUrl: alertDataWithUserId.productUrl,
+        productImage: alertDataWithUserId.productImage,
+        currentPrice: alertDataWithUserId.currentPrice,
+        targetPrice: alertDataWithUserId.targetPrice,
+        alertType: alertDataWithUserId.alertType,
+        status: 'active', // New alerts start as active
+        notificationPreferences: alertDataWithUserId.notificationPreferences || {
           email: true,
           push: true,
           sms: false
         },
-        thresholds: backendAlert.thresholds || {
+        thresholds: alertDataWithUserId.thresholds || {
           priceDropPercentage: 10,
           absolutePriceDrop: 10
         },
-        expiresAt: backendAlert.expires_at,
-        triggeredAt: backendAlert.triggered_at,
-        createdAt: backendAlert.created_at,
-        updatedAt: backendAlert.updated_at,
-        lastCheckedAt: backendAlert.last_checked_at
+        expiresAt: alertDataWithUserId.expiresAt,
+        triggeredAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastCheckedAt: new Date().toISOString()
       };
       
       setAlerts(prev => [newAlert, ...prev]);

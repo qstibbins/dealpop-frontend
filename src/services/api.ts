@@ -95,7 +95,7 @@ class ApiService {
   }
 
   async createAlert(data: any) {
-    // Transform frontend data to backend format (matching FRONTEND_INTEGRATION_GUIDE.md spec)
+    // Transform frontend data to backend format (actual backend spec)
     const backendData = {
       product_id: parseInt(data.productId), // Convert string to number
       product_name: data.productName,
@@ -103,19 +103,8 @@ class ApiService {
       product_image_url: data.productImage,
       current_price: data.currentPrice,
       target_price: data.targetPrice,
-      alert_type: data.alertType,
-      // Include notification preferences in the alert
-      notification_preferences: data.notificationPreferences || {
-        email: true,
-        push: true,
-        sms: false
-      },
-      // Include thresholds if provided
-      thresholds: data.thresholds || {
-        priceDropPercentage: 10,
-        absolutePriceDrop: 10
-      },
-      expires_at: data.expiresAt
+      alert_type: data.alertType
+      // Note: notification_preferences, thresholds, expires_at not in backend spec
     };
     
     return this.request('/api/alerts', {
@@ -162,11 +151,11 @@ class ApiService {
 
   // Notification Preferences API
   async getUserPreferences() {
-    return this.request('/api/notifications/preferences');
+    return this.request('/api/users/preferences');
   }
 
   async updateUserPreferences(data: any) {
-    return this.request('/api/notifications/preferences', {
+    return this.request('/api/users/preferences', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
