@@ -42,9 +42,17 @@ export default function ProductCard({
   const isTargetPriceReached = () => {
     if (!targetPrice) return false;
     
-    // Parse prices to numbers for comparison
-    const currentPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
-    const target = parseFloat(targetPrice.replace(/[^0-9.]/g, ''));
+    // Parse prices to numbers for comparison (preserve negative signs)
+    const currentPrice = parseFloat(price.replace(/[^0-9.-]/g, ''));
+    const target = parseFloat(targetPrice.replace(/[^0-9.-]/g, ''));
+    
+    console.log('🎯 Price comparison:', {
+      rawPrice: price,
+      rawTarget: targetPrice,
+      parsedCurrent: currentPrice,
+      parsedTarget: target,
+      isReached: currentPrice <= target
+    });
     
     // Target price is reached when current price is less than or equal to target
     return currentPrice <= target;
@@ -89,13 +97,23 @@ export default function ProductCard({
 
   return (
     <>
-      <div className={`bg-white shadow rounded-lg p-4 w-full h-full flex flex-col hover:shadow-md transition-shadow ${
-        targetReached ? 'border-2 border-red-500' : ''
+      <div className={`bg-white shadow rounded-lg p-4 w-full h-full flex flex-col transition-all ${
+        targetReached 
+          ? 'border-2 border-green-500 hover:shadow-lg' 
+          : 'hover:shadow-md'
       }`}>
         <div className="flex items-center justify-between mb-2">
-          <span className="px-2 py-1 text-xs font-bold text-white bg-pink-500 rounded-full">
-            DealPop
-          </span>
+          <div className="flex items-center space-x-1">
+            {targetReached && (
+              <img 
+                src="/icon.png" 
+                alt="DP"
+              />
+            )}
+            <span className="px-2 py-1 text-xs font-bold text-white bg-pink-500 rounded-full">
+              DealPop
+            </span>
+          </div>
           {expiresIn && (
             <span className="text-xs text-gray-500 font-medium">
               Tracker ends in {expiresIn}
@@ -138,16 +156,27 @@ export default function ProductCard({
           />
         </div>
         
-        <h3 className="text-lg font-semibold mb-1 line-clamp-2 flex-shrink-0">{title}</h3>
+        <h3 className={`text-lg font-semibold mb-1 line-clamp-2 flex-shrink-0 ${
+          targetReached ? 'text-green-800' : 'text-gray-900'
+        }`}>
+          {title}
+        </h3>
         
         <p className="text-gray-600 text-sm mb-2 flex-shrink-0">{vendor}</p>
         
         {/* Price Display */}
         <div className="mb-3 flex-shrink-0">
+          {targetReached && (
+            <div className="mb-2 text-center">
+              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
+                ✅ TARGET REACHED!
+              </span>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="text-left">
-              <p className="text-xs text-gray-500">Current Price</p>
-              <p className="text-lg font-bold">${price}</p>
+              <p className={`text-xs ${targetReached ? 'text-green-600' : 'text-gray-500'}`}>Current Price</p>
+              <p className={`text-lg font-bold ${targetReached ? 'text-green-700' : 'text-gray-900'}`}>${price}</p>
             </div>
             {targetPrice && (
               <div className="text-left">

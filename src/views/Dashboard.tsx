@@ -6,7 +6,7 @@ import { ImageService } from '../services/imageService';
 import SearchFiltersComponent from '../components/SearchFilters';
 import SearchResults from '../components/SearchResults';
 import CreateAlertModal from '../components/CreateAlertModal';
-import AlertHistoryModal from '../components/AlertHistoryModal';
+import AlertsListModal from '../components/AlertsListModal';
 import { useSearch } from '../hooks/useSearch';
 import { useAlerts } from '../contexts/AlertContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,6 +27,29 @@ interface Product {
   url: string;
   extractedAt: string;
 }
+
+// Helper function to calculate days remaining from expiration date
+const calculateDaysRemaining = (expiresAt: string): string => {
+  try {
+    const expirationDate = new Date(expiresAt);
+    const currentDate = new Date();
+    const timeDiff = expirationDate.getTime() - currentDate.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    if (daysDiff < 0) {
+      return 'Expired';
+    } else if (daysDiff === 0) {
+      return 'Expires today';
+    } else if (daysDiff === 1) {
+      return '1 day';
+    } else {
+      return `${daysDiff} days`;
+    }
+  } catch (error) {
+    console.error('Error calculating days remaining:', error);
+    return 'Unknown';
+  }
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -133,7 +156,7 @@ export default function Dashboard() {
               originalPrice: parseFloat(product.current_price || product.price_goal || '0'), 
               vendor: product.site || product.vendor || 'Unknown',
               targetPrice: product.price_goal || product.target_price,
-              expiresIn: product.expires_at ? 'N/A' : 'N/A', // Calculate from expires_at if needed
+              expiresIn: product.expires_at ? calculateDaysRemaining(product.expires_at) : 'No expiration',
               status: product.active !== undefined ? (product.active ? 'tracking' : 'paused') : 'tracking',
               url: product.url || product.product_url || '',
               extractedAt: product.created_at || product.updated_at || new Date().toISOString(),
@@ -548,11 +571,9 @@ export default function Dashboard() {
       />
 
       {/* Alert Management Modal */}
-      <AlertHistoryModal
+      <AlertsListModal
         isOpen={showAlertModal}
         onClose={() => setShowAlertModal(false)}
-        alertId="all"
-        alertName="All Alerts"
       />
       
       {/* Debug Info (Development Only) */}
