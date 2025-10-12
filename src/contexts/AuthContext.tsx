@@ -50,15 +50,70 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Check if this is from the extension and send auth data back
         sendAuthToExtension(user);
       } else if (user && isInitialLoad) {
-        console.log('🔍 User already logged in (EXISTING session), skipping extension auth');
+        console.log('🔍 User already logged in (EXISTING session)');
+        
+        // Check if we're in extension context
+        const urlParams = new URLSearchParams(window.location.search);
+        const isExtensionAuth = urlParams.get('extension') === 'true';
+        
+        if (isExtensionAuth) {
+          console.log('🔍 Extension auth requested - sending existing session data');
+          sendAuthToExtension(user);
+        }
       }
       
       // After first auth state change, no longer initial load
       isInitialLoad = false;
     });
 
-    return () => unsubscribe();
+    // Listen for messages from extension (like logout events)
+    const handleExtensionMessage = (event: MessageEvent) => {
+      // Only listen to messages from the extension
+      if (event.origin !== window.location.origin) return;
+      
+      const message = event.data;
+      if (message.type === 'EXTENSION_LOGOUT') {
+        console.log('🔍 Received logout message from extension');
+        handleExtensionLogout();
+      }
+    };
+
+    // Listen for Chrome extension messages
+    const handleChromeMessage = (message: any, _sender: any, sendResponse: any) => {
+      if (message.type === 'EXTENSION_LOGOUT') {
+        console.log('🔍 Received logout message from extension via Chrome API');
+        handleExtensionLogout();
+        sendResponse({ success: true });
+      }
+    };
+
+    // Add both message listeners
+    window.addEventListener('message', handleExtensionMessage);
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener(handleChromeMessage);
+    }
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('message', handleExtensionMessage);
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+        chrome.runtime.onMessage.removeListener(handleChromeMessage);
+      }
+    };
   }, []);
+
+  /**
+   * Handle logout message from extension
+   */
+  const handleExtensionLogout = async () => {
+    console.log('🔍 Extension requested logout - signing out dashboard user');
+    try {
+      await authAdapter.signOut();
+      console.log('✅ Dashboard user signed out due to extension logout');
+    } catch (error) {
+      console.error('❌ Failed to sign out dashboard user:', error);
+    }
+  };
 
   /**
    * Sends authentication data to Chrome extension
@@ -102,13 +157,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      // Get Firebase ID token
-      const token = await user.getIdToken();
+      // Get Firebase ID token and force refresh to ensure it's valid
+      const token = await user.getIdToken(true);
       
       // Validate we have real user data and token
       if (!token || !user.uid || !user.email) {
         console.error('❌ Invalid user data or token, not sending to extension');
         return;
+      }
+
+      // Additional validation: check if token is not expired
+      try {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        if (tokenPayload.exp && tokenPayload.exp < currentTime) {
+          console.error('❌ Token is expired, not sending to extension');
+          return;
+        }
+        
+        console.log('✅ Token validation passed, expires at:', new Date(tokenPayload.exp * 1000));
+      } catch (tokenError) {
+        console.warn('⚠️ Could not validate token expiry, proceeding anyway:', tokenError);
       }
       
       console.log('📤 Sending auth to extension:', EXTENSION_ID);
@@ -130,16 +200,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         () => {
           if (chrome.runtime.lastError) {
             console.error('❌ Failed to send to extension:', chrome.runtime.lastError.message);
-            alert('Failed to connect to extension. Please try again.');
+            console.log('❌ Extension may not be running or may not be responding');
           } else {
             console.log('✅ Auth successfully sent to extension');
-            // Show success message
-            alert('Authentication successful! This window will close automatically.');
-            // Close tab after 2 seconds
-            setTimeout(() => window.close(), 2000);
           }
         }
       );
+
+      // Always close window after sending auth (don't wait for extension response)
+      console.log('🔄 Closing auth window in 3 seconds...');
+      setTimeout(() => {
+        console.log('🚪 Attempting to close auth window');
+        
+        // Try to close the window
+        window.close();
+        
+        // Check if window is still open after attempting to close
+        setTimeout(() => {
+          if (!window.closed) {
+            console.log('⚠️ Window could not be closed automatically (opened in regular tab)');
+            // Show user message to close manually
+            alert('Authentication complete! You can now close this tab and return to the extension.');
+          }
+        }, 100);
+      }, 3000);
     } catch (error) {
       console.error('Error sending auth to extension:', error);
       

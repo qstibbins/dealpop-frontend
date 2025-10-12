@@ -4,10 +4,7 @@ import { AlertProvider } from './contexts/AlertContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 import Sidebar from './layout/Sidebar';
 import Dashboard from './views/Dashboard';
-// import Login from './views/Login';
-import LoginV2 from './views/LoginV2';
-import ABTestLogin from './components/ABTestLogin';
-import ABTestDashboard from './components/ABTestDashboard';
+import Login from './views/Login';
 import Settings from './views/Settings';
 import './styles/theme.css'
 
@@ -17,9 +14,7 @@ function App() {
       <AlertProvider>
         <div className="flex">
           <Routes>
-            <Route path="/login" element={<ABTestLogin />} />
-            <Route path="/login-v2" element={<LoginV2 />} />
-            <Route path="/ab-test-analytics" element={<ABTestDashboard />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <>
