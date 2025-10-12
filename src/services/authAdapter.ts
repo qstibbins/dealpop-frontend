@@ -26,6 +26,12 @@ class AuthAdapter {
       const { getAuth } = await import('firebase/auth');
       const auth = getAuth();
       
+      // Check if Firebase config is properly set
+      const config = auth.app.options;
+      if (!config.apiKey || config.apiKey === 'demo-api-key' || !config.projectId || config.projectId === 'demo-project') {
+        throw new Error('Firebase configuration not properly set');
+      }
+      
       // If we can get the auth instance without error, Firebase is available
       this.useMockAuth = false;
       console.log('Firebase Auth available, using real authentication');

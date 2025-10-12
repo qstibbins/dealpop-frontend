@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { authAdapter } from '../services/authAdapter';
-import { abTestAnalytics } from '../components/ABTestAnalytics';
+
+// Get Chrome extension ID from environment
+const EXTENSION_ID = import.meta.env.VITE_EXTENSION_ID;
 
 interface AuthContextType {
   user: User | null;
@@ -32,35 +34,90 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔍 AuthContext useEffect - setting up auth listener');
+    let isInitialLoad = true;
+    
     const unsubscribe = authAdapter.onAuthStateChanged((user) => {
+      console.log('🔍 Auth state changed - user:', user ? user.email : 'null');
+      console.log('🔍 Is initial load:', isInitialLoad);
+      
       setUser(user);
       setLoading(false);
       
-      // Sync stored AB test events when user logs in
-      if (user) {
-        abTestAnalytics.syncStoredEvents();
+      if (user && !isInitialLoad) {
+        console.log('🔍 User logged in (NEW session), checking extension auth');
         
         // Check if this is from the extension and send auth data back
-        handleExtensionAuth(user);
+        sendAuthToExtension(user);
+      } else if (user && isInitialLoad) {
+        console.log('🔍 User already logged in (EXISTING session), skipping extension auth');
       }
+      
+      // After first auth state change, no longer initial load
+      isInitialLoad = false;
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Handle extension authentication communication
-  const handleExtensionAuth = async (user: User) => {
+  /**
+   * Sends authentication data to Chrome extension
+   * Call this after successful Firebase authentication
+   */
+  const sendAuthToExtension = async (user: User) => {
+    console.log('🔍 sendAuthToExtension called for user:', user.email);
+    
+    // Check if this login came from the extension
+    const fullUrl = window.location.href;
+    const urlParams = new URLSearchParams(window.location.search);
+    const isFromExtension = urlParams.get('extension') === 'true' || fullUrl.includes('extension=true');
+    
+    console.log('🔍 Full URL:', fullUrl);
+    console.log('🔍 URL search:', window.location.search);
+    console.log('🔍 URL params extension:', urlParams.get('extension'));
+    console.log('🔍 URL includes extension=true:', fullUrl.includes('extension=true'));
+    console.log('🔍 isFromExtension:', isFromExtension);
+    console.log('🔍 EXTENSION_ID:', EXTENSION_ID);
+    console.log('🔍 Chrome runtime available:', !!window.chrome?.runtime);
+    
+    if (!isFromExtension) {
+      console.log('❌ Not from extension, skipping extension auth');
+      return;
+    }
+
+    // Verify extension ID is configured
+    if (!EXTENSION_ID) {
+      console.error('VITE_EXTENSION_ID not configured in environment variables');
+      return;
+    }
+
+    // Verify Chrome extension API is available
+    if (typeof window.chrome === 'undefined' || !window.chrome.runtime || !window.chrome.runtime.sendMessage) {
+      console.error('❌ Chrome runtime API not available');
+      console.error('❌ This page must be opened from the Chrome extension to send auth messages');
+      console.log('Chrome object:', window.chrome);
+      console.log('Runtime object:', window.chrome?.runtime);
+      alert('Error: Chrome extension API not available. Please open this page from the extension.');
+      return;
+    }
+
     try {
-      // Check if this is from the extension
-      const urlParams = new URLSearchParams(window.location.search);
-      const isFromExtension = urlParams.get('extension') === 'true';
+      // Get Firebase ID token
+      const token = await user.getIdToken();
       
-      if (isFromExtension && window.chrome && (window.chrome as any).runtime) {
-        // Get the Firebase ID token
-        const token = await user.getIdToken();
-        
-        // Send auth data to extension
-        (window.chrome as any).runtime.sendMessage({
+      // Validate we have real user data and token
+      if (!token || !user.uid || !user.email) {
+        console.error('❌ Invalid user data or token, not sending to extension');
+        return;
+      }
+      
+      console.log('📤 Sending auth to extension:', EXTENSION_ID);
+      console.log('📤 User data:', { uid: user.uid, email: user.email, token: token.substring(0, 20) + '...' });
+
+      // Send message to extension
+      chrome.runtime.sendMessage(
+        EXTENSION_ID,
+        {
           type: 'EXTENSION_AUTH_SUCCESS',
           user: {
             uid: user.uid,
@@ -69,23 +126,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             photoURL: user.photoURL
           },
           token: token
-        }, (response: any) => {
-          if (response && response.success) {
-            // Show success message and close tab after a delay
-            setTimeout(() => {
-              alert('Extension connected successfully! You can close this tab.');
-              window.close();
-            }, 1000);
+        },
+        () => {
+          if (chrome.runtime.lastError) {
+            console.error('❌ Failed to send to extension:', chrome.runtime.lastError.message);
+            alert('Failed to connect to extension. Please try again.');
+          } else {
+            console.log('✅ Auth successfully sent to extension');
+            // Show success message
+            alert('Authentication successful! This window will close automatically.');
+            // Close tab after 2 seconds
+            setTimeout(() => window.close(), 2000);
           }
+        }
+      );
+    } catch (error) {
+      console.error('Error sending auth to extension:', error);
+      
+      // Send error to extension
+      if (window.chrome?.runtime && EXTENSION_ID) {
+        chrome.runtime.sendMessage(EXTENSION_ID, {
+          type: 'EXTENSION_AUTH_ERROR',
+          error: error instanceof Error ? error.message : 'Authentication failed'
         });
       }
-    } catch (error) {
-      console.error('Error handling extension auth:', error);
     }
   };
 
   const signInWithGoogle = async () => {
-    return await authAdapter.signInWithGoogle();
+    console.log('🔍 signInWithGoogle called');
+    const result = await authAdapter.signInWithGoogle();
+    console.log('🔍 signInWithGoogle result:', result);
+    return result;
   };
 
   const signInWithFacebook = async () => {

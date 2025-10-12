@@ -1,7 +1,7 @@
 // Configuration for static mode (GitHub Pages deployment)
 export const STATIC_MODE_CONFIG = {
   // SINGLE CONFIGURATION VALUE - Change this ONE thing to control everything
-  ENABLE_STATIC_MODE: true,
+  ENABLE_STATIC_MODE: false,
   
   // Demo mode settings
   DEMO_MODE: {
