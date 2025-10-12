@@ -108,41 +108,32 @@ export default function Dashboard() {
       try {
         setLoading(true);
         const response = await apiAdapter.getProducts();
-        const productsData = (response as any).products || response;
+        console.log('🔍 RAW API RESPONSE:', response);
+        
+        // Backend returns array directly, not wrapped in {products: [...]}
+        const productsData = response;
+        console.log('🔍 PRODUCTS DATA:', productsData);
+        console.log('🔍 IS ARRAY:', Array.isArray(productsData));
+        console.log('🔍 LENGTH:', productsData?.length);
         
         // Convert API response to Product format
         let convertedProducts: Product[] = [];
         if (Array.isArray(productsData)) {
           convertedProducts = productsData.map(product => {
-            // Debug vendor and price information
-            if (process.env.NODE_ENV === 'development') {
-              console.log('🔍 Product data debugging:', {
-                productId: product.id,
-                productTitle: product.productName || product.title,
-                originalCurrentPrice: product.currentPrice,
-                originalPrice: product.price,
-                vendor: product.vendor,
-                store: product.store,
-                retailer: product.retailer,
-                seller: product.seller,
-                allKeys: Object.keys(product)
-              });
-            }
-            
-            const finalPrice = product.currentPrice?.toString() || product.price;
+            console.log('🔍 MAPPING PRODUCT:', product);
             
             return {
-              id: product.id,
-              imageUrl: product.imageUrl || product.productImage || ImageService.getFallbackImage(product.productName || product.title),
-              title: product.productName || product.title,
-              price: finalPrice,
-              originalPrice: product.currentPrice || product.price, // Keep original numeric price
-              vendor: product.vendor || product.store || product.retailer || product.seller || 'Unknown',
-              targetPrice: product.targetPrice?.toString(),
-              expiresIn: product.expiresIn,
+              id: product.id.toString(),
+              imageUrl: product.product_image_url || ImageService.getFallbackImage(product.product_name),
+              title: product.product_name,
+              price: product.current_price,
+              originalPrice: parseFloat(product.current_price), // Keep original numeric price
+              vendor: product.vendor || 'Unknown',
+              targetPrice: product.target_price,
+              expiresIn: 'N/A', // Calculate from expires_at if needed
               status: product.status || 'tracking',
-              url: product.productUrl || product.url,
-              extractedAt: product.extractedAt || product.createdAt,
+              url: product.product_url,
+              extractedAt: product.extracted_at,
             };
           });
         }
@@ -178,90 +169,16 @@ export default function Dashboard() {
       } catch (error) {
         console.error('Failed to load products from API:', error);
         
-        // Check if this is a network/connection error or authentication error
-        const isNetworkError = error instanceof TypeError || 
-                              (error instanceof Error && error.message.includes('fetch')) ||
-                              (error instanceof Error && error.message.includes('network')) ||
-                              (error instanceof Error && error.message.includes('connection')) ||
-                              (error instanceof Error && error.message.includes('User not authenticated'));
-        
-        if (isNetworkError) {
-          // Network error - use dummy products as fallback
-          console.log('Network error detected, using dummy products as fallback');
-          setProducts([
-            {
-              id: '1',
-              imageUrl: ImageService.getFallbackImage('Sample Laptop'),
-              title: 'Sample Laptop',
-              price: '999.99',
-              originalPrice: 999.99,
-              vendor: 'TechStore',
-              targetPrice: '899.99',
-              expiresIn: '10 days',
-              status: 'tracking' as const,
-              url: 'https://example.com/laptop',
-              extractedAt: new Date().toISOString(),
-            },
-            {
-              id: '2',
-              imageUrl: ImageService.getFallbackImage('Wireless Headphones'),
-              title: 'Wireless Headphones',
-              price: '199.99',
-              originalPrice: 199.99,
-              vendor: 'AudioShop',
-              targetPrice: '149.99',
-              expiresIn: '5 days',
-              status: 'paused' as const,
-              url: 'https://example.com/headphones',
-              extractedAt: new Date().toISOString(),
-            },
-            {
-              id: '3',
-              imageUrl: ImageService.getFallbackImage('Modern Sofa'),
-              title: 'Modern Sofa',
-              price: '499.99',
-              originalPrice: 499.99,
-              vendor: 'HomeStore',
-              targetPrice: '399.99',
-              expiresIn: '20 days',
-              status: 'completed' as const,
-              url: 'https://example.com/sofa',
-              extractedAt: new Date().toISOString(),
-            },
-            {
-              id: '4',
-              imageUrl: ImageService.getFallbackImage('Gaming Monitor'),
-              title: 'Gaming Monitor',
-              price: '299.99',
-              originalPrice: 299.99,
-              vendor: 'GameStore',
-              targetPrice: '349.99',
-              expiresIn: '15 days',
-              status: 'tracking' as const,
-              url: 'https://example.com/monitor',
-              extractedAt: new Date().toISOString(),
-            },
-          ]);
-          setStats({
-            totalProducts: 4,
-            trackingProducts: 2,
-            completedProducts: 1,
-            totalSavings: 150,
-          });
-          setError(error instanceof Error && error.message.includes('User not authenticated') 
-            ? 'Authentication issue. Showing demo data. Please log in again.' 
-            : 'Network connection issue. Showing demo data.');
-        } else {
-          // API error - show empty state
-          setProducts([]);
-          setError(error instanceof Error ? error.message : 'Failed to load products');
-          setStats({
-            totalProducts: 0,
-            trackingProducts: 0,
-            completedProducts: 0,
-            totalSavings: 0,
-          });
-        }
+        // NO FALLBACKS - LET IT FAIL HARD
+        console.error('API ERROR - NO FALLBACKS, NO MOCK DATA:', error);
+        setProducts([]);
+        setError(error instanceof Error ? error.message : 'Failed to load products');
+        setStats({
+          totalProducts: 0,
+          trackingProducts: 0,
+          completedProducts: 0,
+          totalSavings: 0,
+        });
       } finally {
         setLoading(false);
       }
@@ -324,23 +241,8 @@ export default function Dashboard() {
         };
       } catch (error) {
         console.error('Error processing product:', product.id, error);
-        // Return a safe fallback
-        return {
-          id: product.id,
-          product_name: product.title || 'Unknown Product',
-          price: product.price || '0',
-          originalPrice: product.originalPrice, // Preserve originalPrice for API calls
-          vendor: product.vendor || 'Unknown',
-          targetPrice: product.targetPrice,
-          expiresIn: product.expiresIn,
-          status: product.status || 'tracking',
-          url: product.url || '#',
-          extractedAt: product.extractedAt || new Date().toISOString(),
-          brand: '',
-          color: '',
-          capacity: '',
-          hasAlert: false,
-        };
+        // NO FALLBACKS - THROW THE ERROR
+        throw error;
       }
     });
 

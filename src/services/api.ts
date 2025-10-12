@@ -39,25 +39,25 @@ class ApiService {
         }
       });
     }
-    return this.request(`/tracked-products?${params.toString()}`);
+    return this.request(`/api/products?${params.toString()}`);
   }
 
   async createProduct(data: any) {
-    return this.request('/tracked-products', {
+    return this.request('/api/products', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async updateProduct(id: string, data: any) {
-    return this.request(`/tracked-products/${id}`, {
+    return this.request(`/api/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
   async deleteProduct(id: string) {
-    return this.request(`/tracked-products/${id}`, { method: 'DELETE' });
+    return this.request(`/api/products/${id}`, { method: 'DELETE' });
   }
 
   async getPriceHistory(id: string, params?: { limit?: number }) {
@@ -69,7 +69,7 @@ class ApiService {
         }
       });
     }
-    return this.request(`/tracked-products/${id}/price-history?${queryParams.toString()}`);
+    return this.request(`/api/products/${id}/price-history?${queryParams.toString()}`);
   }
 
   // Alerts API
@@ -82,47 +82,47 @@ class ApiService {
         }
       });
     }
-    return this.request(`/alerts?${params.toString()}`);
+    return this.request(`/api/alerts?${params.toString()}`);
   }
 
   async createAlert(data: any) {
-    return this.request('/alerts', {
+    return this.request('/api/alerts', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async updateAlert(id: string, data: any) {
-    return this.request(`/alerts/${id}`, {
+    return this.request(`/api/alerts/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
   async deleteAlert(id: string) {
-    return this.request(`/alerts/${id}`, { method: 'DELETE' });
+    return this.request(`/api/alerts/${id}`, { method: 'DELETE' });
   }
 
   async dismissAlert(id: string) {
-    return this.request(`/alerts/${id}/dismiss`, { method: 'PUT' });
+    return this.request(`/api/alerts/${id}/dismiss`, { method: 'PUT' });
   }
 
   async getAlertHistory(alertId: string) {
-    return this.request(`/alerts/${alertId}/history`);
+    return this.request(`/api/alerts/${alertId}/history`);
   }
 
   // User Profile API
   async getUserProfile() {
-    return this.request('/users/profile');
+    return this.request('/api/users/profile');
   }
 
   // Notification Preferences API
   async getUserPreferences() {
-    return this.request('/notifications/preferences');
+    return this.request('/api/notifications/preferences');
   }
 
   async updateUserPreferences(data: any) {
-    return this.request('/notifications/preferences', {
+    return this.request('/api/notifications/preferences', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -137,12 +137,12 @@ class ApiService {
         }
       });
     }
-    return this.request(`/notifications/logs?${queryParams.toString()}`);
+    return this.request(`/api/notifications/logs?${queryParams.toString()}`);
   }
 
   // A/B Testing API
   async recordABTestEvent(event: any) {
-    return this.request('/ab-test/event', {
+    return this.request('/api/ab-test/event', {
       method: 'POST',
       body: JSON.stringify(event),
     });
@@ -157,20 +157,25 @@ class ApiService {
         }
       });
     }
-    return this.request(`/analytics/ab-test?${params.toString()}`);
+    return this.request(`/api/analytics/ab-test?${params.toString()}`);
   }
 
   // Search API
   async getSearchSuggestions(query: string) {
-    return this.request(`/search/suggestions?query=${encodeURIComponent(query)}`);
+    return this.request(`/api/search/suggestions?query=${encodeURIComponent(query)}`);
   }
 
   async getVendors() {
-    return this.request('/search/vendors');
+    return this.request('/api/search/vendors');
   }
 
   async getSearchStats() {
-    return this.request('/search/stats');
+    return this.request('/api/search/stats');
+  }
+
+  // Stats and Analytics API
+  async getStats() {
+    return this.request('/api/stats');
   }
 }
 

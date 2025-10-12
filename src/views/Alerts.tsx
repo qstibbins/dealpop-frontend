@@ -4,7 +4,6 @@ import AlertCard from '../components/AlertCard';
 import CreateAlertModal from '../components/CreateAlertModal';
 import AlertHistoryModal from '../components/AlertHistoryModal';
 import { Alert } from '../types/alerts';
-import { MockAlertService } from '../services/mockAlertService';
 
 export default function Alerts() {
   const { 
@@ -37,11 +36,6 @@ export default function Alerts() {
   //   setShowHistoryModal(true);
   // };
 
-  const handleResetMockData = () => {
-    MockAlertService.clearMockData();
-    MockAlertService.initializeMockData();
-    window.location.reload();
-  };
 
   const getFilterButtonClass = (filterValue: typeof filter) => {
     return `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -71,16 +65,6 @@ export default function Alerts() {
           <p className="text-gray-600">Monitor product prices and get notified of changes</p>
         </div>
         <div className="flex space-x-2">
-          {/* Reset Mock Data Button (only in development) */}
-          {process.env.NODE_ENV === 'development' && (
-            <button
-              onClick={handleResetMockData}
-              className="px-3 py-2 text-xs bg-yellow-100 text-yellow-700 rounded-md hover:bg-yellow-200 transition-colors"
-              title="Reset mock data for testing"
-            >
-              🔄 Reset Mock
-            </button>
-          )}
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"

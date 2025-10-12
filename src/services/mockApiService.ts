@@ -126,6 +126,12 @@ class MockApiService {
     return { success: true, message: 'Alert deleted successfully (mock)' };
   }
 
+  async dismissAlert(id: string) {
+    await this.delay(300);
+    console.log('Mock: Dismissing alert', id);
+    return { success: true, message: 'Alert dismissed successfully (mock)' };
+  }
+
   async getAlertHistory(alertId: string) {
     await this.delay(200);
     const history = getMockAlertHistory(alertId);
@@ -143,6 +149,24 @@ class MockApiService {
     await this.delay(400);
     console.log('Mock: Updating user preferences', data);
     return { success: true, message: 'Preferences updated successfully (mock)' };
+  }
+
+  async getUserProfile() {
+    await this.delay(200);
+    const user = getMockUser();
+    return { profile: user };
+  }
+
+  async getNotificationLogs(params?: { limit?: number }) {
+    await this.delay(200);
+    console.log('Mock: Getting notification logs', params);
+    return { logs: [] };
+  }
+
+  async getPriceHistory(id: string, params?: { limit?: number }) {
+    await this.delay(200);
+    console.log('Mock: Getting price history for product', id, params);
+    return { history: [] };
   }
 
   // A/B Testing API

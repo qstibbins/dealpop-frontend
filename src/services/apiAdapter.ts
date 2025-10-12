@@ -1,53 +1,15 @@
 import { apiService } from './api';
-import { mockApiService } from './mockApiService';
-import { shouldForceMockData } from '../config/staticMode';
 
 class ApiAdapter {
-  private useMockData: boolean = false;
-
   constructor() {
-    // Check if we should use mock data
-    this.checkApiAvailability();
-  }
-
-  private async checkApiAvailability(): Promise<void> {
-    // Check if we should force mock data mode
-    if (shouldForceMockData()) {
-      this.useMockData = true;
-      console.log('Static mode enabled, using mock data');
-      return;
-    }
-
-    try {
-      // Try to make a simple API call to check if backend is available
-      const response = await fetch('http://localhost:3000/users/profile', { 
-        method: 'GET',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer test' // This will fail but tells us if backend is running
-        },
-        signal: AbortSignal.timeout(3000) // 3 second timeout
-      });
-      
-      // If we get any response (even 401), backend is running
-      if (response.status === 401 || response.ok) {
-        this.useMockData = false;
-        console.log('Backend API available, using real data');
-      } else {
-        this.useMockData = true;
-        console.log('Backend API not available, using mock data');
-      }
-    } catch (error) {
-      this.useMockData = true;
-      console.log('Backend API not available, using mock data:', error);
-    }
+    console.log('API Adapter initialized - REAL API CALLS ONLY, NO FALLBACKS, NO MOCK DATA EVER');
   }
 
   private getService() {
-    return this.useMockData ? mockApiService : apiService;
+    return apiService; // ONLY REAL API SERVICE, NO MOCK DATA EVER
   }
 
-  // Products API
+  // Products API - Call the real backend API
   async getProducts(filters?: any) {
     return this.getService().getProducts(filters);
   }
@@ -135,43 +97,11 @@ class ApiAdapter {
 
   // Stats and Analytics
   async getStats() {
-    // Only available in mock service
-    if (this.useMockData) {
-      return (this.getService() as any).getStats();
-    }
-    // For real API, return basic stats
-    return {
-      totalProducts: 0,
-      trackingProducts: 0,
-      completedProducts: 0,
-      activeAlerts: 0,
-      triggeredAlerts: 0,
-      totalSavings: 0,
-    };
+    // ALWAYS use the service determined by useMockData - NO EXCEPTIONS
+    return this.getService().getStats();
   }
 
-  // Force mock data mode (for testing)
-  forceMockMode(enabled: boolean) {
-    this.useMockData = enabled;
-    console.log(`Mock data mode ${enabled ? 'enabled' : 'disabled'}`);
-  }
 
-  // Check if currently using mock data
-  isUsingMockData(): boolean {
-    return this.useMockData;
-  }
-
-  // Get real user info if available
-  private getRealUser(): any {
-    try {
-      // Try to get real user from Firebase auth
-      const { getAuth } = require('firebase/auth');
-      const auth = getAuth();
-      return auth.currentUser;
-    } catch (error) {
-      return null;
-    }
-  }
 }
 
 export const apiAdapter = new ApiAdapter();
