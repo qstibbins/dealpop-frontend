@@ -29,39 +29,47 @@ class ApiService {
     return data;
   }
 
-  // Products API
+  // Tracked Products API (DealPop backend endpoints)
   async getProducts(filters?: any) {
     const params = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          if (typeof value === 'object') {
-            params.append(key, JSON.stringify(value));
-          } else {
-            params.append(key, String(value));
-          }
+          params.append(key, String(value));
         }
       });
     }
-    return this.request(`/products?${params.toString()}`);
+    return this.request(`/tracked-products?${params.toString()}`);
   }
 
   async createProduct(data: any) {
-    return this.request('/products', {
+    return this.request('/tracked-products', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async updateProduct(id: string, data: any) {
-    return this.request(`/products/${id}`, {
+    return this.request(`/tracked-products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
   async deleteProduct(id: string) {
-    return this.request(`/products/${id}`, { method: 'DELETE' });
+    return this.request(`/tracked-products/${id}`, { method: 'DELETE' });
+  }
+
+  async getPriceHistory(id: string, params?: { limit?: number }) {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    return this.request(`/tracked-products/${id}/price-history?${queryParams.toString()}`);
   }
 
   // Alerts API
@@ -95,20 +103,41 @@ class ApiService {
     return this.request(`/alerts/${id}`, { method: 'DELETE' });
   }
 
+  async dismissAlert(id: string) {
+    return this.request(`/alerts/${id}/dismiss`, { method: 'PUT' });
+  }
+
   async getAlertHistory(alertId: string) {
     return this.request(`/alerts/${alertId}/history`);
   }
 
-  // User Preferences API
+  // User Profile API
+  async getUserProfile() {
+    return this.request('/users/profile');
+  }
+
+  // Notification Preferences API
   async getUserPreferences() {
-    return this.request('/user/preferences');
+    return this.request('/notifications/preferences');
   }
 
   async updateUserPreferences(data: any) {
-    return this.request('/user/preferences', {
+    return this.request('/notifications/preferences', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
+  }
+
+  async getNotificationLogs(params?: { limit?: number }) {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    return this.request(`/notifications/logs?${queryParams.toString()}`);
   }
 
   // A/B Testing API

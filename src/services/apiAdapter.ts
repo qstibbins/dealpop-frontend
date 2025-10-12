@@ -20,13 +20,17 @@ class ApiAdapter {
 
     try {
       // Try to make a simple API call to check if backend is available
-      const response = await fetch('/api/health', { 
+      const response = await fetch('http://localhost:3000/users/profile', { 
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer test' // This will fail but tells us if backend is running
+        },
         signal: AbortSignal.timeout(3000) // 3 second timeout
       });
       
-      if (response.ok) {
+      // If we get any response (even 401), backend is running
+      if (response.status === 401 || response.ok) {
         this.useMockData = false;
         console.log('Backend API available, using real data');
       } else {
@@ -77,15 +81,30 @@ class ApiAdapter {
     return this.getService().deleteAlert(id);
   }
 
+  async dismissAlert(id: string) {
+    return this.getService().dismissAlert(id);
+  }
+
   async getAlertHistory(alertId: string) {
     return this.getService().getAlertHistory(alertId);
   }
 
+  // User Profile API
+  async getUserProfile() {
+    return this.getService().getUserProfile();
+  }
+
   // User Preferences API
   async getUserPreferences() {
-    // Pass real user info if available
-    const realUser = this.getRealUser();
-    return this.getService().getUserPreferences(realUser);
+    return this.getService().getUserPreferences();
+  }
+
+  async getNotificationLogs(params?: { limit?: number }) {
+    return this.getService().getNotificationLogs(params);
+  }
+
+  async getPriceHistory(id: string, params?: { limit?: number }) {
+    return this.getService().getPriceHistory(id, params);
   }
 
   async updateUserPreferences(data: any) {
