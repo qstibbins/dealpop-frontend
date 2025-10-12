@@ -307,20 +307,6 @@ export default function Dashboard() {
 
   return (
     <main className="p-6 flex-1 bg-white">
-      {/* Demo Mode Banner */}
-      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <span className="text-blue-400">🎯</span>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-800">Demo Mode</h3>
-            <p className="text-sm text-blue-700 mt-1">
-              This is a static preview with realistic mock data.
-            </p>
-          </div>
-        </div>
-      </div>
       
       {/* Network Error Warning Banner */}
       {error && error.includes('Network connection issue') && (
