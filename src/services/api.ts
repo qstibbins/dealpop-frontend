@@ -43,21 +43,40 @@ class ApiService {
   }
 
   async createProduct(data: any) {
+    // Transform frontend data to backend format
+    const backendData = {
+      url: data.product_url || data.url,
+      title: data.product_name || data.title,
+      price_goal: data.target_price || data.price_goal,
+      site: data.vendor || data.site,
+      variants: data.variants || {}
+    };
+    
     return this.request('/api/products', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(backendData),
     });
   }
 
   async updateProduct(id: string, data: any) {
-    return this.request(`/api/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
+    // Transform frontend data to backend format for PATCH /api/products/:id/update
+    const backendData: any = {};
+    if (data.target_price !== undefined) backendData.price_goal = data.target_price;
+    if (data.expires_at !== undefined) backendData.expires_at = data.expires_at;
+    if (data.status !== undefined) backendData.active = data.status === 'tracking';
+    
+    return this.request(`/api/products/${id}/update`, {
+      method: 'PATCH',
+      body: JSON.stringify(backendData),
     });
   }
 
   async deleteProduct(id: string) {
     return this.request(`/api/products/${id}`, { method: 'DELETE' });
+  }
+
+  async stopTracking(id: string) {
+    return this.request(`/api/products/${id}/stop`, { method: 'POST' });
   }
 
   async getPriceHistory(id: string, params?: { limit?: number }) {

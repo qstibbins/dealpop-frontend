@@ -26,6 +26,10 @@ class ApiAdapter {
     return this.getService().deleteProduct(id);
   }
 
+  async stopTracking(id: string) {
+    return this.getService().stopTracking(id);
+  }
+
   // Alerts API
   async getAlerts(filters?: any) {
     return this.getService().getAlerts(filters);

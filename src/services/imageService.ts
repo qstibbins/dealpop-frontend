@@ -7,6 +7,7 @@ export interface ImageConfig {
 
 export class ImageService {
   private static readonly FALLBACK_IMAGES = {
+    default: 'img/DealPop_Horizontal_logo.png',
     laptop: 'img/laptop.png',
     headphones: 'img/headphones.png',
     sofa: 'img/sofa.png',
@@ -20,6 +21,9 @@ export class ImageService {
    * Get fallback image based on product name
    */
   static getFallbackImage(productName: string): string {
+    if (!productName || typeof productName !== 'string') {
+      return this.FALLBACK_IMAGES.default;
+    }
     const title = productName.toLowerCase();
     
     let fallbackPath: string;
@@ -40,7 +44,7 @@ export class ImageService {
       fallbackPath = this.FALLBACK_IMAGES.mixer;
     } else {
       // Default fallback
-      fallbackPath = this.FALLBACK_IMAGES.laptop;
+      fallbackPath = this.FALLBACK_IMAGES.default;
     }
     
     // Construct full URL with base URL

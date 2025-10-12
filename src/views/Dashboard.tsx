@@ -122,18 +122,21 @@ export default function Dashboard() {
           convertedProducts = productsData.map(product => {
             console.log('🔍 MAPPING PRODUCT:', product);
             
+            // Handle missing title gracefully
+            const productTitle = product.title || product.product_name || 'Unknown Product';
+            
             return {
               id: product.id.toString(),
-              imageUrl: product.product_image_url || ImageService.getFallbackImage(product.product_name),
-              title: product.product_name,
-              price: product.current_price,
-              originalPrice: parseFloat(product.current_price), // Keep original numeric price
-              vendor: product.vendor || 'Unknown',
-              targetPrice: product.target_price,
-              expiresIn: 'N/A', // Calculate from expires_at if needed
-              status: product.status || 'tracking',
-              url: product.product_url,
-              extractedAt: product.extracted_at,
+              imageUrl: product.image_url || ImageService.getFallbackImage(productTitle),
+              title: productTitle,
+              price: product.current_price || product.price_goal || '0',
+              originalPrice: parseFloat(product.current_price || product.price_goal || '0'), 
+              vendor: product.site || product.vendor || 'Unknown',
+              targetPrice: product.price_goal || product.target_price,
+              expiresIn: product.expires_at ? 'N/A' : 'N/A', // Calculate from expires_at if needed
+              status: product.active !== undefined ? (product.active ? 'tracking' : 'paused') : 'tracking',
+              url: product.url || product.product_url || '',
+              extractedAt: product.created_at || product.updated_at || new Date().toISOString(),
             };
           });
         }
