@@ -56,9 +56,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const urlParams = new URLSearchParams(window.location.search);
         const isExtensionAuth = urlParams.get('extension') === 'true';
         
+        console.log('🔍 URL params:', window.location.search);
+        console.log('🔍 Extension param value:', urlParams.get('extension'));
+        console.log('🔍 isExtensionAuth:', isExtensionAuth);
+        
         if (isExtensionAuth) {
           console.log('🔍 Extension auth requested - sending existing session data');
           sendAuthToExtension(user);
+        } else {
+          console.log('🔍 No extension auth detected, not sending data');
         }
       }
       
@@ -121,6 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    */
   const sendAuthToExtension = async (user: User) => {
     console.log('🔍 sendAuthToExtension called for user:', user.email);
+    console.log('🔍 EXTENSION_ID from env:', EXTENSION_ID);
     
     // Check if this login came from the extension
     const fullUrl = window.location.href;

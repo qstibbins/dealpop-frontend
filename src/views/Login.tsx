@@ -21,9 +21,12 @@ export default function Login() {
       const urlParams = new URLSearchParams(window.location.search);
       const isExtensionAuth = urlParams.get('extension') === 'true';
       
+      console.log('🔍 Login useEffect - user authenticated, isExtensionAuth:', isExtensionAuth);
+      
       if (isExtensionAuth) {
         console.log('🔍 Extension auth detected - staying on login page to handle auth flow');
         // Don't redirect - let the AuthContext handle sending auth to extension
+        // The extension auth UI will be shown by the render logic below
       } else {
         console.log('🔍 User already authenticated, redirecting to dashboard');
         navigate('/dashboard', { replace: true });
@@ -65,7 +68,14 @@ export default function Login() {
   const urlParams = new URLSearchParams(window.location.search);
   const isExtensionAuth = urlParams.get('extension') === 'true';
   
+  console.log('🔍 Login render - URL:', window.location.href);
+  console.log('🔍 Login render - search params:', window.location.search);
+  console.log('🔍 Login render - isExtensionAuth:', isExtensionAuth);
+  console.log('🔍 Login render - user:', !!user);
+  console.log('🔍 Login render - authLoading:', authLoading);
+  
   if (isExtensionAuth && user && !authLoading) {
+    console.log('🔍 Showing extension auth screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 px-4 relative overflow-hidden">
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 max-w-md w-full relative z-10 border border-white/20 text-center">
