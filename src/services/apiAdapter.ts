@@ -69,9 +69,7 @@ class ApiAdapter {
     return this.getService().getNotificationLogs(params);
   }
 
-  async getPriceHistory(id: string, params?: { limit?: number }) {
-    return this.getService().getPriceHistory(id, params);
-  }
+  // Price history removed for MVP - not needed for launch
 
   async updateUserPreferences(data: any) {
     return this.getService().updateUserPreferences(data);

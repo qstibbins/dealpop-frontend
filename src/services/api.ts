@@ -79,17 +79,7 @@ class ApiService {
     return this.request(`/api/products/${id}/stop`, { method: 'POST' });
   }
 
-  async getPriceHistory(id: string, params?: { limit?: number }) {
-    const queryParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          queryParams.append(key, String(value));
-        }
-      });
-    }
-    return this.request(`/api/products/${id}/price-history?${queryParams.toString()}`);
-  }
+  // Price history removed for MVP - not needed for launch
 
   // Alerts API
   async getAlerts(filters?: any) {
@@ -105,16 +95,51 @@ class ApiService {
   }
 
   async createAlert(data: any) {
+    // Transform frontend data to backend format (matching FRONTEND_INTEGRATION_GUIDE.md spec)
+    const backendData = {
+      product_id: parseInt(data.productId), // Convert string to number
+      product_name: data.productName,
+      product_url: data.productUrl, 
+      product_image_url: data.productImage,
+      current_price: data.currentPrice,
+      target_price: data.targetPrice,
+      alert_type: data.alertType,
+      // Include notification preferences in the alert
+      notification_preferences: data.notificationPreferences || {
+        email: true,
+        push: true,
+        sms: false
+      },
+      // Include thresholds if provided
+      thresholds: data.thresholds || {
+        priceDropPercentage: 10,
+        absolutePriceDrop: 10
+      },
+      expires_at: data.expiresAt
+    };
+    
     return this.request('/api/alerts', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(backendData),
     });
   }
 
   async updateAlert(id: string, data: any) {
+    // Transform frontend data to backend format for updates
+    const backendData: any = {};
+    
+    if (data.targetPrice !== undefined) backendData.target_price = data.targetPrice;
+    if (data.alertType !== undefined) backendData.alert_type = data.alertType;
+    if (data.status !== undefined) backendData.status = data.status;
+    if (data.notificationPreferences !== undefined) {
+      backendData.notification_preferences = data.notificationPreferences;
+    }
+    if (data.thresholds !== undefined) backendData.thresholds = data.thresholds;
+    if (data.expiresAt !== undefined) backendData.expires_at = data.expiresAt;
+    
     return this.request(`/api/alerts/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: JSON.stringify(backendData),
     });
   }
 

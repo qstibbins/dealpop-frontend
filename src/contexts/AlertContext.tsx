@@ -71,11 +71,39 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
           apiAdapter.getUserPreferences(),
         ]);
 
-        // Handle different response formats
-        const alertsData = (alertsResponse as any).alerts || alertsResponse;
-        const preferencesData = (preferencesResponse as any).preferences || preferencesResponse;
+        // Handle backend response format (from FRONTEND_INTEGRATION_GUIDE.md)
+        const alertsData = (alertsResponse as any).success ? (alertsResponse as any).alerts : alertsResponse;
+        const preferencesData = (preferencesResponse as any).success ? (preferencesResponse as any).preferences : preferencesResponse;
 
-        setAlerts(Array.isArray(alertsData) ? alertsData : []);
+        // Transform backend alert format to frontend format
+        const transformedAlerts = Array.isArray(alertsData) ? alertsData.map((alert: any) => ({
+          id: alert.id,
+          userId: alert.user_id,
+          productId: alert.product_id,
+          productName: alert.product_name,
+          productUrl: alert.product_url,
+          productImage: alert.product_image_url,
+          currentPrice: alert.current_price,
+          targetPrice: alert.target_price,
+          alertType: alert.alert_type,
+          status: alert.status,
+          notificationPreferences: alert.notification_preferences || {
+            email: true,
+            push: true,
+            sms: false
+          },
+          thresholds: alert.thresholds || {
+            priceDropPercentage: 10,
+            absolutePriceDrop: 10
+          },
+          expiresAt: alert.expires_at,
+          triggeredAt: alert.triggered_at,
+          createdAt: alert.created_at,
+          updatedAt: alert.updated_at,
+          lastCheckedAt: alert.last_checked_at
+        })) : [];
+
+        setAlerts(transformedAlerts);
         setAlertPreferences(preferencesData);
       } catch (err) {
         console.error('Failed to load alerts:', err);
@@ -97,7 +125,36 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
       };
       
       const response = await apiAdapter.createAlert(alertDataWithUserId);
-      const newAlert = (response as any).alert || response;
+      const backendAlert = (response as any).success ? (response as any).alert : response;
+      
+      // Transform backend response to frontend format
+      const newAlert = {
+        id: backendAlert.id,
+        userId: backendAlert.user_id,
+        productId: backendAlert.product_id,
+        productName: backendAlert.product_name,
+        productUrl: backendAlert.product_url,
+        productImage: backendAlert.product_image_url,
+        currentPrice: backendAlert.current_price,
+        targetPrice: backendAlert.target_price,
+        alertType: backendAlert.alert_type,
+        status: backendAlert.status,
+        notificationPreferences: backendAlert.notification_preferences || {
+          email: true,
+          push: true,
+          sms: false
+        },
+        thresholds: backendAlert.thresholds || {
+          priceDropPercentage: 10,
+          absolutePriceDrop: 10
+        },
+        expiresAt: backendAlert.expires_at,
+        triggeredAt: backendAlert.triggered_at,
+        createdAt: backendAlert.created_at,
+        updatedAt: backendAlert.updated_at,
+        lastCheckedAt: backendAlert.last_checked_at
+      };
+      
       setAlerts(prev => [newAlert, ...prev]);
       return newAlert;
     } catch (err) {

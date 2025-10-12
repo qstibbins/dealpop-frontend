@@ -1,22 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { apiAdapter } from '../services/apiAdapter';
 
 export default function Settings() {
   const { user, signOut } = useAuth();
   const [email, setEmail] = useState(user?.email || '');
+  const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsEnabled, setSmsEnabled] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [preferences, setPreferences] = useState<any>(null);
+
+  // Load notification preferences on component mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      if (!user) return;
+      
+      try {
+        const response = await apiAdapter.getUserPreferences();
+        const prefs = (response as any).success ? (response as any).preferences : response;
+        
+        setPreferences(prefs);
+        setEmailNotifications(prefs.email_notifications ?? true);
+        setSmsEnabled(prefs.sms_notifications ?? false);
+        setPhoneNumber(prefs.phone_number || '');
+      } catch (error) {
+        console.error('Failed to load preferences:', error);
+      }
+    };
+
+    loadPreferences();
+  }, [user]);
 
   const handleSaveSettings = async () => {
     setLoading(true);
     setMessage('');
     
-    // Simulate saving settings
-    setTimeout(() => {
+    try {
+      const updatedPreferences = {
+        email_notifications: emailNotifications,
+        sms_notifications: smsEnabled,
+        phone_number: phoneNumber || null,
+      };
+
+      await apiAdapter.updateUserPreferences(updatedPreferences);
       setMessage('Settings saved successfully!');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      setMessage('Error saving settings. Please try again.');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleSignOut = async () => {
@@ -81,7 +116,8 @@ export default function Settings() {
           </div>
           <input
             type="checkbox"
-            defaultChecked
+            checked={emailNotifications}
+            onChange={(e) => setEmailNotifications(e.target.checked)}
             className="form-checkbox h-5 w-5 text-blue-600"
           />
         </div>
@@ -94,10 +130,24 @@ export default function Settings() {
           <input
             type="checkbox"
             checked={smsEnabled}
-            onChange={() => setSmsEnabled(!smsEnabled)}
+            onChange={(e) => setSmsEnabled(e.target.checked)}
             className="form-checkbox h-5 w-5 text-blue-600"
           />
         </div>
+
+        {smsEnabled && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Phone Number</label>
+            <input
+              type="tel"
+              className="border px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="+1234567890"
+            />
+            <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +1 for US)</p>
+          </div>
+        )}
       </div>
 
       {/* Account Actions */}
