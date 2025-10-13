@@ -116,7 +116,6 @@ export default function SearchResults({
               extractedAt={product.extractedAt}
               onCreateAlert={onCreateAlert}
               onViewProduct={onViewProduct}
-              hasAlert={product.hasAlert}
             />
           </div>
         ))}

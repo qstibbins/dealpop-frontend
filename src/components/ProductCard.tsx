@@ -77,7 +77,7 @@ export default function ProductCard({
       extractedAt,
     };
     
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log('🔍 ProductCard passing to modal:', {
         productId: id,
         productTitle: title,

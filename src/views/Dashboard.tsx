@@ -427,7 +427,7 @@ export default function Dashboard() {
             price: product.price,
             vendor: product.vendor,
             targetPrice: product.targetPrice,
-            originalPrice: product.originalPrice,
+            originalPrice: product.originalPrice?.toString(),
             expiresIn: product.expiresIn,
             status: product.status,
             url: product.url,
@@ -499,7 +499,7 @@ export default function Dashboard() {
               id: product.id,
               product_name: product.title,
               price: product.price,
-              originalPrice: product.originalPrice, // Preserve originalPrice for API calls
+              originalPrice: product.originalPrice?.toString(),
               vendor: product.vendor,
               targetPrice: finalTargetPrice,
               expiresIn: product.expiresIn,
@@ -517,7 +517,7 @@ export default function Dashboard() {
               id: product.id,
               product_name: product.title || 'Unknown Product',
               price: product.price || '0',
-              originalPrice: product.originalPrice, // Preserve originalPrice for API calls
+              originalPrice: product.originalPrice?.toString(),
               vendor: product.vendor || 'Unknown',
               targetPrice: product.targetPrice,
               expiresIn: product.expiresIn,

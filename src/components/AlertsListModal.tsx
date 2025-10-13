@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAlerts } from '../contexts/AlertContext';
 import Modal from './ui/Modal';
 import { formatPrice } from '../utils/priceFormatting';

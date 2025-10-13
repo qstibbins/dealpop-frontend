@@ -1,25 +1,20 @@
-// Chrome API types
-declare global {
-  interface Window {
-    chrome: {
-      storage: {
-        sync: {
-          get: (keys: string[], callback: (result: any) => void) => void;
-          set: (items: any, callback?: () => void) => void;
-        };
-        onChanged: {
-          addListener: (callback: (changes: any, namespace: string) => void) => void;
-        };
-      };
+// Chrome Storage types for extension integration
+type ChromeStorage = {
+  storage: {
+    sync: {
+      get: (keys: string[], callback: (result: any) => void) => void;
+      set: (items: any, callback?: () => void) => void;
     };
-  }
-}
+    onChanged: {
+      addListener: (callback: (changes: any, namespace: string) => void) => void;
+    };
+  };
+};
 
 export interface ExtractedProduct {
   id: string;
   product_name: string;
   price: string;
-  originalPrice?: number; // Add originalPrice to preserve numeric price for API calls
   color?: string;
   brand: string;
   capacity?: string;
@@ -40,20 +35,28 @@ export class ChromeStorageService {
    * Check if Chrome extension API is available
    */
   private static isChromeExtension(): boolean {
-    return typeof window !== 'undefined' && !!window.chrome && !!window.chrome.storage;
+    return typeof window !== 'undefined' && !!(window as any).chrome && !!(window as any).chrome.storage;
+  }
+  
+  private static getChrome(): ChromeStorage | null {
+    if (this.isChromeExtension()) {
+      return (window as any).chrome;
+    }
+    return null;
   }
 
   /**
    * Get all extracted products from Chrome storage
    */
   static async getProducts(): Promise<ExtractedProduct[]> {
-    if (!this.isChromeExtension()) {
+    const chrome = this.getChrome();
+    if (!chrome) {
       console.warn('Chrome extension API not available, returning empty array');
       return [];
     }
 
     return new Promise((resolve) => {
-      window.chrome.storage.sync.get(['extractedProducts'], (result: { extractedProducts?: ExtractedProduct[] }) => {
+      chrome.storage.sync.get(['extractedProducts'], (result: { extractedProducts?: ExtractedProduct[] }) => {
         const products = result.extractedProducts || [];
         resolve(products);
       });
@@ -64,7 +67,8 @@ export class ChromeStorageService {
    * Save a new extracted product
    */
   static async saveProduct(product: Omit<ExtractedProduct, 'id' | 'extractedAt'>): Promise<void> {
-    if (!this.isChromeExtension()) {
+    const chrome = this.getChrome();
+    if (!chrome) {
       console.warn('Chrome extension API not available');
       return;
     }
@@ -76,11 +80,11 @@ export class ChromeStorageService {
         extractedAt: new Date().toISOString(),
       };
 
-      window.chrome.storage.sync.get(['extractedProducts'], (result: { extractedProducts?: ExtractedProduct[] }) => {
+      chrome.storage.sync.get(['extractedProducts'], (result: { extractedProducts?: ExtractedProduct[] }) => {
         const products = result.extractedProducts || [];
         products.unshift(newProduct); // Add to beginning
         
-        window.chrome.storage.sync.set({ extractedProducts: products }, () => {
+        chrome.storage.sync.set({ extractedProducts: products }, () => {
           resolve();
         });
       });
@@ -91,19 +95,20 @@ export class ChromeStorageService {
    * Update an existing product
    */
   static async updateProduct(id: string, updates: Partial<ExtractedProduct>): Promise<void> {
-    if (!this.isChromeExtension()) {
+    const chrome = this.getChrome();
+    if (!chrome) {
       console.warn('Chrome extension API not available');
       return;
     }
 
     return new Promise((resolve) => {
-      window.chrome.storage.sync.get(['extractedProducts'], (result: { extractedProducts?: ExtractedProduct[] }) => {
+      chrome.storage.sync.get(['extractedProducts'], (result: { extractedProducts?: ExtractedProduct[] }) => {
         const products = result.extractedProducts || [];
         const index = products.findIndex((p: ExtractedProduct) => p.id === id);
         
         if (index !== -1) {
           products[index] = { ...products[index], ...updates };
-          window.chrome.storage.sync.set({ extractedProducts: products }, () => {
+          chrome.storage.sync.set({ extractedProducts: products }, () => {
             resolve();
           });
         } else {
@@ -117,17 +122,18 @@ export class ChromeStorageService {
    * Delete a product
    */
   static async deleteProduct(id: string): Promise<void> {
-    if (!this.isChromeExtension()) {
+    const chrome = this.getChrome();
+    if (!chrome) {
       console.warn('Chrome extension API not available');
       return;
     }
 
     return new Promise((resolve) => {
-      window.chrome.storage.sync.get(['extractedProducts'], (result: { extractedProducts?: ExtractedProduct[] }) => {
+      chrome.storage.sync.get(['extractedProducts'], (result: { extractedProducts?: ExtractedProduct[] }) => {
         const products = result.extractedProducts || [];
         const filteredProducts = products.filter((p: ExtractedProduct) => p.id !== id);
         
-        window.chrome.storage.sync.set({ extractedProducts: filteredProducts }, () => {
+        chrome.storage.sync.set({ extractedProducts: filteredProducts }, () => {
           resolve();
         });
       });
@@ -138,12 +144,13 @@ export class ChromeStorageService {
    * Listen for changes in storage (when extension adds new products)
    */
   static onStorageChange(callback: (products: ExtractedProduct[]) => void): void {
-    if (!this.isChromeExtension()) {
+    const chrome = this.getChrome();
+    if (!chrome) {
       console.warn('Chrome extension API not available');
       return;
     }
 
-    window.chrome.storage.onChanged.addListener((changes: any, namespace: string) => {
+    chrome.storage.onChanged.addListener((changes: any, namespace: string) => {
       if (namespace === 'sync' && changes.extractedProducts) {
         const products = changes.extractedProducts.newValue || [];
         callback(products);

@@ -10,7 +10,7 @@ interface AlertDebugInfoProps {
 export default function AlertDebugInfo({ products, alerts, isVisible = false }: AlertDebugInfoProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!isVisible || process.env.NODE_ENV !== 'development') {
+  if (!isVisible || !import.meta.env.DEV) {
     return null;
   }
 

@@ -10,7 +10,6 @@ export default function Settings() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [preferences, setPreferences] = useState<any>(null);
 
   // Load notification preferences on component mount
   useEffect(() => {
@@ -21,7 +20,6 @@ export default function Settings() {
         const response = await apiAdapter.getUserPreferences();
         const prefs = (response as any).success ? (response as any).preferences : response;
         
-        setPreferences(prefs);
         setEmailNotifications(prefs.email_notifications ?? true);
         setSmsEnabled(prefs.sms_notifications ?? false);
         setPhoneNumber(prefs.phone_number || '');
