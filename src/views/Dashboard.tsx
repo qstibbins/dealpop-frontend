@@ -298,13 +298,6 @@ export default function Dashboard() {
   };
 
   const getFilterButtonClass = (filterValue: typeof filter) => {
-    if (filterValue === 'deals') {
-      return `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-        filter === filterValue
-          ? 'bg-pink-500 text-white'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-      }`;
-    }
     return `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
       filter === filterValue
         ? 'bg-blue-600 text-white'
@@ -328,6 +321,7 @@ export default function Dashboard() {
             if (!product.targetPrice || !product.price) return false;
             const currentPrice = parseFloat(product.price.replace(/[^0-9.]/g, ''));
             const targetPrice = parseFloat(product.targetPrice.replace(/[^0-9.]/g, ''));
+            // Show products where target price has been reached (current <= target)
             return !isNaN(currentPrice) && !isNaN(targetPrice) && currentPrice <= targetPrice;
           } catch (error) {
             console.error('Error parsing prices for deals filter:', error);
@@ -366,7 +360,7 @@ export default function Dashboard() {
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold">Product Tracker</h1>
             <div className="text-sm text-green-600 font-medium">
-              Total Saved: <span className="font-bold">{formatPrice(stats.totalSavings)}</span>
+              Potential Savings: <span className="font-bold">{formatPrice(stats.totalSavings)}</span>
             </div>
           </div>
           <div className="flex items-center space-x-2">
