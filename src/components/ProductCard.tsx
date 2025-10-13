@@ -106,8 +106,9 @@ export default function ProductCard({
           <div className="flex items-center space-x-1">
             {targetReached && (
               <img 
-                src="/icon.png" 
-                alt="DP"
+                src="/img/DealPop_Horizontal_logo.png" 
+                alt="DealPop"
+                className="w-16 h-12"
               />
             )}
             <span className="px-2 py-1 text-xs font-bold text-white bg-pink-500 rounded-full">
