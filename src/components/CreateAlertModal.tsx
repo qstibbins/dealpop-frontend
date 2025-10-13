@@ -26,9 +26,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
   const [formData, setFormData] = useState({
     targetPrice: productData?.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '',
     alertType: 'price_drop' as Alert['alertType'],
-    emailNotifications: alertPreferences?.emailNotifications ?? true,
-    pushNotifications: alertPreferences?.pushNotifications ?? true,
-    smsNotifications: alertPreferences?.smsNotifications ?? false,
+    trackingPeriod: '30' as string,
   });
 
   // Validation function using the utility
@@ -40,18 +38,16 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
 
   // Initialize form with existing alert data if editing
   useEffect(() => {
-    if (existingAlert) {
+    if (existingAlert && productData) {
       setFormData({
-        targetPrice: existingAlert.targetPrice.toString(),
+        targetPrice: productData.targetPrice || existingAlert.targetPrice.toString(),
         alertType: existingAlert.alertType,
-        emailNotifications: existingAlert.notificationPreferences.email,
-        pushNotifications: existingAlert.notificationPreferences.push,
-        smsNotifications: existingAlert.notificationPreferences.sms,
+        trackingPeriod: '30', // Default to 30 days for existing alerts
       });
       // Clear validation error when editing existing alert
       setValidationError(null);
     }
-  }, [existingAlert]);
+  }, [existingAlert, productData]);
 
   // Update form data when productData changes (for new alerts)
   useEffect(() => {
@@ -61,7 +57,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
       const calculatedTargetPrice = productData.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '';
       const finalTargetPrice = targetPriceFromDatabase || calculatedTargetPrice;
       
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log('🔍 CreateAlertModal price calculation:', {
           productName: productData.name,
           currentPrice: productData.currentPrice,
@@ -73,9 +69,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
       setFormData({
         targetPrice: finalTargetPrice,
         alertType: 'price_drop' as Alert['alertType'],
-        emailNotifications: alertPreferences?.emailNotifications ?? true,
-        pushNotifications: alertPreferences?.pushNotifications ?? true,
-        smsNotifications: alertPreferences?.smsNotifications ?? false,
+        trackingPeriod: '30',
       });
       // Clear validation error when product data changes
       setValidationError(null);
@@ -98,15 +92,10 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
     setLoading(true);
     try {
       if (existingAlert) {
-        // Update existing alert
-        await updateAlert(existingAlert.id, {
+        // Update existing tracked product
+        await updateAlert(existingAlert.productId.toString(), {
           targetPrice: parseFloat(formData.targetPrice),
           alertType: formData.alertType,
-          notificationPreferences: {
-            email: formData.emailNotifications,
-            push: formData.pushNotifications,
-            sms: formData.smsNotifications,
-          },
         });
       } else {
         // Create new alert
@@ -120,15 +109,15 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
           alertType: formData.alertType,
           status: 'active',
           notificationPreferences: {
-            email: formData.emailNotifications,
-            push: formData.pushNotifications,
-            sms: formData.smsNotifications,
+            email: true,
+            push: true,
+            sms: false
           },
           thresholds: {
             priceDropPercentage: 10,
             absolutePriceDrop: 10,
           },
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          expiresAt: new Date(Date.now() + parseInt(formData.trackingPeriod) * 24 * 60 * 60 * 1000).toISOString(),
         });
       }
       onClose();
@@ -147,7 +136,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={existingAlert ? "Edit Price Alert" : "Create Price Alert"}
+      title={existingAlert ? "Update Price Alert" : "Create Price Alert"}
       size="md"
     >
       {productData && (
@@ -190,39 +179,33 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
           )}
         </div>
 
-
-
+        {/* Tracking Period Section */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Notification Preferences
+            Tracking Period
           </label>
-          <div className="space-y-2">
+          <div className="flex space-x-4">
             <label className="flex items-center">
               <input
-                type="checkbox"
-                checked={formData.emailNotifications}
-                onChange={(e) => setFormData(prev => ({ ...prev, emailNotifications: e.target.checked }))}
+                type="radio"
+                name="trackingPeriod"
+                value="30"
+                checked={formData.trackingPeriod === '30'}
+                onChange={(e) => setFormData(prev => ({ ...prev, trackingPeriod: e.target.value }))}
                 className="mr-2"
               />
-              Email Notifications
+              <span className="text-sm">30 days</span>
             </label>
             <label className="flex items-center">
               <input
-                type="checkbox"
-                checked={formData.pushNotifications}
-                onChange={(e) => setFormData(prev => ({ ...prev, pushNotifications: e.target.checked }))}
+                type="radio"
+                name="trackingPeriod"
+                value="60"
+                checked={formData.trackingPeriod === '60'}
+                onChange={(e) => setFormData(prev => ({ ...prev, trackingPeriod: e.target.value }))}
                 className="mr-2"
               />
-              Push Notifications
-            </label>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.smsNotifications}
-                onChange={(e) => setFormData(prev => ({ ...prev, smsNotifications: e.target.checked }))}
-                className="mr-2"
-              />
-              SMS Notifications
+              <span className="text-sm">60 days</span>
             </label>
           </div>
         </div>

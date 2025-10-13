@@ -61,9 +61,9 @@ class ApiService {
   async updateProduct(id: string, data: any) {
     // Transform frontend data to backend format for PATCH /api/products/:id/update
     const backendData: any = {};
-    if (data.target_price !== undefined) backendData.price_goal = data.target_price;
+    if (data.target_price !== undefined) backendData.target_price = data.target_price;
     if (data.expires_at !== undefined) backendData.expires_at = data.expires_at;
-    if (data.status !== undefined) backendData.active = data.status === 'tracking';
+    if (data.status !== undefined) backendData.status = data.status;
     
     return this.request(`/api/products/${id}/update`, {
       method: 'PATCH',
@@ -113,23 +113,25 @@ class ApiService {
     });
   }
 
-  async updateAlert(id: string, data: any) {
-    // Transform frontend data to backend format for updates
-    const backendData: any = {};
-    
-    if (data.targetPrice !== undefined) backendData.target_price = data.targetPrice;
-    if (data.alertType !== undefined) backendData.alert_type = data.alertType;
-    if (data.status !== undefined) backendData.status = data.status;
-    if (data.notificationPreferences !== undefined) {
-      backendData.notification_preferences = data.notificationPreferences;
+  async updateAlert(productId: string, data: any) {
+    // Update the tracked product directly using product endpoints
+    const productUpdateData: any = {};
+    if (data.targetPrice !== undefined) {
+      productUpdateData.target_price = data.targetPrice;
     }
-    if (data.thresholds !== undefined) backendData.thresholds = data.thresholds;
-    if (data.expiresAt !== undefined) backendData.expires_at = data.expiresAt;
     
-    return this.request(`/api/alerts/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(backendData),
-    });
+    console.log('🔍 UPDATING PRODUCT:', productId, 'WITH DATA:', productUpdateData);
+    
+    if (Object.keys(productUpdateData).length > 0) {
+      const response = await this.request(`/api/products/${productId}/update`, {
+        method: 'PATCH',
+        body: JSON.stringify(productUpdateData),
+      });
+      console.log('🔍 UPDATE RESPONSE:', response);
+    }
+    
+    // Return success response
+    return { success: true };
   }
 
   async deleteAlert(id: string) {

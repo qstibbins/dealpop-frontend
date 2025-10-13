@@ -12,7 +12,6 @@ import { useAlerts } from '../contexts/AlertContext';
 import { useAuth } from '../contexts/AuthContext';
 import AlertDebugInfo from '../components/AlertDebugInfo';
 import { formatPrice } from '../utils/priceFormatting';
-import { isStaticMode } from '../config/staticMode';
 
 interface Product {
   id: string;
@@ -82,14 +81,14 @@ export default function Dashboard() {
       const alertProductId = alert.productId ? parseInt(alert.productId.toString(), 10) : null;
       const matches = alertProductId === productIdNum && alert.status === 'active';
       
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log(`🔍 Alert ${alert.id}: productId=${alert.productId}, status=${alert.status}, matches=${matches}`);
       }
       
       return matches;
     });
     
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log(`🔍 Product ${productId} (${productIdNum}) has alert: ${hasAlert}`);
     }
     
@@ -103,10 +102,10 @@ export default function Dashboard() {
     
     const foundAlert = alerts.find(alert => {
       const alertProductId = alert.productId ? parseInt(alert.productId.toString(), 10) : null;
-      return alertProductId === productIdNum && alert.status === 'active';
+      return alertProductId === productIdNum;
     });
     
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log(`🔍 getExistingAlert for product ${productId}:`, foundAlert);
     }
     
@@ -124,94 +123,102 @@ export default function Dashboard() {
   }, [user, navigate]);
 
   // Load products from API
-  useEffect(() => {
+  const loadProducts = useCallback(async () => {
     if (!user) return; // Don't load products if not authenticated
     
-    const loadProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await apiAdapter.getProducts();
-        console.log('🔍 RAW API RESPONSE:', response);
-        
-        // Backend returns array directly, not wrapped in {products: [...]}
-        const productsData = response;
-        console.log('🔍 PRODUCTS DATA:', productsData);
-        console.log('🔍 IS ARRAY:', Array.isArray(productsData));
-        console.log('🔍 LENGTH:', productsData?.length);
-        
-        // Convert API response to Product format
-        let convertedProducts: Product[] = [];
-        if (Array.isArray(productsData)) {
-          convertedProducts = productsData.map(product => {
-            console.log('🔍 MAPPING PRODUCT:', product);
-            
-            // Handle missing title gracefully
-            const productTitle = product.title || product.product_name || 'Unknown Product';
-            
-            return {
-              id: product.id.toString(),
-              imageUrl: product.image_url || ImageService.getFallbackImage(productTitle),
-              title: productTitle,
-              price: product.current_price || product.price_goal || '0',
-              originalPrice: parseFloat(product.current_price || product.price_goal || '0'), 
-              vendor: product.site || product.vendor || 'Unknown',
-              targetPrice: product.price_goal || product.target_price,
-              expiresIn: product.expires_at ? calculateDaysRemaining(product.expires_at) : 'No expiration',
-              status: product.active !== undefined ? (product.active ? 'tracking' : 'paused') : 'tracking',
-              url: product.url || product.product_url || '',
-              extractedAt: product.created_at || product.updated_at || new Date().toISOString(),
-            };
-          });
-        }
-        
-        // Always use real data from API, even if empty
-        setError(null); // Clear any previous errors
-        setProducts(convertedProducts);
-        
-        // Calculate stats
-        const totalProducts = convertedProducts.length;
-        const trackingProducts = convertedProducts.filter(p => p.status === 'tracking').length;
-        const completedProducts = convertedProducts.filter(p => p.status === 'completed').length;
-        const totalSavings = convertedProducts.reduce((sum, p) => {
-          if (p.targetPrice && p.price) {
-            const currentPrice = parseFloat(p.price.replace(/[^0-9.]/g, ''));
-            const targetPrice = parseFloat(p.targetPrice.replace(/[^0-9.]/g, ''));
-            return sum + Math.max(0, currentPrice - targetPrice);
-          }
-          return sum;
-        }, 0);
-        
-        // Use realistic stats for demo mode
-        if (isStaticMode()) {
-          setStats({
-            totalProducts: 12,
-            trackingProducts: 8,
-            completedProducts: 2,
-            totalSavings: 920.00, // Match the UI
-          });
-        } else {
-          setStats({ totalProducts, trackingProducts, completedProducts, totalSavings });
-        }
-      } catch (error) {
-        console.error('Failed to load products from API:', error);
-        
-        // NO FALLBACKS - LET IT FAIL HARD
-        console.error('API ERROR - NO FALLBACKS, NO MOCK DATA:', error);
-        setProducts([]);
-        setError(error instanceof Error ? error.message : 'Failed to load products');
-        setStats({
-          totalProducts: 0,
-          trackingProducts: 0,
-          completedProducts: 0,
-          totalSavings: 0,
+    try {
+      setLoading(true);
+      const response = await apiAdapter.getProducts();
+      console.log('🔍 RAW API RESPONSE:', response);
+      
+      // Backend returns array directly, not wrapped in {products: [...]}
+      const productsData = response;
+      console.log('🔍 PRODUCTS DATA:', productsData);
+      console.log('🔍 IS ARRAY:', Array.isArray(productsData));
+      console.log('🔍 LENGTH:', Array.isArray(productsData) ? productsData.length : 0);
+      
+      // Convert API response to Product format
+      let convertedProducts: Product[] = [];
+      if (Array.isArray(productsData)) {
+        convertedProducts = productsData.map(product => {
+          console.log('🔍 MAPPING PRODUCT:', product);
+          console.log('🔍 AMAZON ECHO DOT DATA:', product.id, product.title, 'target_price:', product.target_price, 'price_goal:', product.price_goal);
+          
+          // Handle missing title gracefully
+          const productTitle = product.title || product.product_name || 'Unknown Product';
+          
+          return {
+            id: product.id.toString(),
+            imageUrl: product.image_url || ImageService.getFallbackImage(productTitle),
+            title: productTitle,
+            price: product.current_price || '0',
+            originalPrice: parseFloat(product.current_price || '0'), 
+            vendor: product.site || product.vendor || 'Unknown',
+            targetPrice: product.target_price,
+            expiresIn: product.expires_at ? calculateDaysRemaining(product.expires_at) : 'No expiration',
+            status: product.active !== undefined ? (product.active ? 'tracking' : 'paused') : 'tracking',
+            url: product.url || product.product_url || '',
+            extractedAt: product.created_at || product.updated_at || new Date().toISOString(),
+          };
         });
-      } finally {
-        setLoading(false);
       }
+      
+      // Always use real data from API, even if empty
+      setProducts(convertedProducts);
+      
+      // Calculate stats
+      const totalProducts = convertedProducts.length;
+      const trackingProducts = convertedProducts.filter(p => p.status === 'tracking').length;
+      const completedProducts = convertedProducts.filter(p => p.status === 'completed').length;
+      const totalSavings = convertedProducts.reduce((sum, product) => {
+        if (product.targetPrice && product.originalPrice) {
+          const targetPriceNum = parseFloat(product.targetPrice);
+          const savings = product.originalPrice - targetPriceNum;
+          return sum + (savings > 0 ? savings : 0);
+        }
+        return sum;
+      }, 0);
+      
+      setStats({
+        totalProducts,
+        trackingProducts,
+        completedProducts,
+        totalSavings,
+      });
+      
+    } catch (error) {
+      console.error('Failed to load products:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load products');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
+  // Listen for product refresh events from AlertContext
+  useEffect(() => {
+    const handleProductRefresh = (event: Event) => {
+      console.log('🔄 Received product refresh event:', event);
+      console.log('🔄 About to reload products...');
+      loadProducts();
     };
 
-    loadProducts();
-  }, []);
+    console.log('🔄 Setting up refreshProducts event listener');
+    window.addEventListener('refreshProducts', handleProductRefresh);
+    return () => {
+      console.log('🔄 Removing refreshProducts event listener');
+      window.removeEventListener('refreshProducts', handleProductRefresh);
+    };
+  }, [loadProducts]);
+
+  // DEBUG: Log when products change
+  useEffect(() => {
+    console.log('🔍 PRODUCTS UPDATED:', products.map(p => ({ id: p.id, title: p.title, targetPrice: p.targetPrice })));
+  }, [products]);
 
   // Filter products based on status and deal status
   const filteredProducts = useMemo(() => {
@@ -246,7 +253,6 @@ export default function Dashboard() {
           return null;
         }
         
-        const existingAlert = getExistingAlert(product.id);
         const hasAlert = productHasAlert(product.id);
         
         return {
@@ -255,7 +261,7 @@ export default function Dashboard() {
           price: product.price || '0',
           originalPrice: product.originalPrice, // Preserve originalPrice for API calls
           vendor: product.vendor || 'Unknown',
-          targetPrice: existingAlert ? existingAlert.targetPrice?.toString() : product.targetPrice,
+          targetPrice: product.targetPrice,
           expiresIn: product.expiresIn,
           status: product.status || 'tracking',
           url: product.url || '#',
@@ -480,7 +486,7 @@ export default function Dashboard() {
             const existingAlert = getExistingAlert(product.id);
             const finalTargetPrice = existingAlert ? existingAlert.targetPrice?.toString() : product.targetPrice;
             
-            if (process.env.NODE_ENV === 'development' && product.id === '858') {
+            if (import.meta.env.DEV && product.id === '858') {
               console.log(`🎯 Product ${product.id} target price mapping:`, {
                 productTargetPrice: product.targetPrice,
                 alertTargetPrice: existingAlert?.targetPrice,
@@ -543,18 +549,16 @@ export default function Dashboard() {
           // Use originalPrice if available, otherwise parse the formatted price
           const currentPrice = selectedProduct.originalPrice || parseFloat(selectedProduct.price.replace(/[^0-9.]/g, ''));
           
-          // Use the SAME target price logic as ProductCard for consistency
-          const existingAlert = getExistingAlert(selectedProduct.id);
-          const finalTargetPrice = existingAlert ? existingAlert.targetPrice?.toString() : selectedProduct.targetPrice;
+          // Use the product's target price from database (not stale alert data)
+          const finalTargetPrice = selectedProduct.targetPrice;
           
-          if (process.env.NODE_ENV === 'development') {
+          if (import.meta.env.DEV) {
             console.log('🔍 Modal price debugging:', {
               originalPrice: selectedProduct.originalPrice,
               formattedPrice: selectedProduct.price,
               parsedPrice: currentPrice,
               productTitle: selectedProduct.title,
               productTargetPrice: selectedProduct.targetPrice,
-              alertTargetPrice: existingAlert?.targetPrice,
               finalTargetPrice: finalTargetPrice
             });
           }
@@ -567,7 +571,32 @@ export default function Dashboard() {
             targetPrice: finalTargetPrice, // Use same logic as ProductCard for consistency
           };
         })() : undefined}
-        existingAlert={selectedProduct ? getExistingAlert(selectedProduct.id) : undefined}
+        existingAlert={selectedProduct ? { 
+          id: 'tracked', 
+          userId: user?.uid || '',
+          productId: selectedProduct.id,
+          productName: selectedProduct.title,
+          productUrl: selectedProduct.url,
+          productImage: selectedProduct.imageUrl,
+          currentPrice: selectedProduct.originalPrice || 0,
+          targetPrice: selectedProduct.targetPrice,
+          alertType: 'price_drop' as const,
+          status: 'active' as const,
+          notificationPreferences: {
+            email: true,
+            push: true,
+            sms: false
+          },
+          thresholds: {
+            priceDropPercentage: 10,
+            absolutePriceDrop: 10
+          },
+          expiresAt: '',
+          triggeredAt: undefined,
+          createdAt: '',
+          updatedAt: '',
+          lastCheckedAt: ''
+        } : undefined}
       />
 
       {/* Alert Management Modal */}
@@ -580,7 +609,7 @@ export default function Dashboard() {
       <AlertDebugInfo 
         products={products}
         alerts={alerts}
-        isVisible={process.env.NODE_ENV === 'development'}
+        isVisible={import.meta.env.DEV}
       />
     </main>
   );
