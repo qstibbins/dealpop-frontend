@@ -1,8 +1,23 @@
 import { ExtractedProduct } from '../services/chromeStorage';
 import ProductCard from './ProductCard';
 
+// Dashboard Product interface (matches what Dashboard passes)
+interface DashboardProduct {
+  id: string;
+  imageUrl: string;
+  title: string;
+  price: string;
+  originalPrice?: number;
+  vendor: string;
+  targetPrice?: string;
+  expiresIn?: string;
+  status: 'tracking' | 'paused' | 'completed';
+  url: string;
+  extractedAt: string;
+}
+
 interface SearchResultsProps {
-  products: ExtractedProduct[];
+  products: DashboardProduct[];
   filteredProducts: ExtractedProduct[];
   loading: boolean;
   className?: string;
