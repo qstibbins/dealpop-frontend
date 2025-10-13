@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiAdapter } from '../services/apiAdapter';
 import { SearchService } from '../services/searchService';
-import { ImageService } from '../services/imageService';
 import SearchFiltersComponent from '../components/SearchFilters';
 import SearchResults from '../components/SearchResults';
 import CreateAlertModal from '../components/CreateAlertModal';
@@ -95,24 +94,6 @@ export default function Dashboard() {
     return hasAlert;
   }, [alerts]);
 
-  // Helper function to get existing alert for a product
-  const getExistingAlert = useCallback((productId: string) => {
-    // Convert productId to number for comparison since API returns numbers
-    const productIdNum = parseInt(productId, 10);
-    
-    const foundAlert = alerts.find(alert => {
-      const alertProductId = alert.productId ? parseInt(alert.productId.toString(), 10) : null;
-      return alertProductId === productIdNum;
-    });
-    
-    if (import.meta.env.DEV) {
-      console.log(`🔍 getExistingAlert for product ${productId}:`, foundAlert);
-    }
-    
-    return foundAlert;
-  }, [alerts]);
-
-  // No dummy products - we'll show proper error states instead
 
   // Check authentication and redirect if needed
   useEffect(() => {
@@ -142,14 +123,33 @@ export default function Dashboard() {
       if (Array.isArray(productsData)) {
         convertedProducts = productsData.map(product => {
           console.log('🔍 MAPPING PRODUCT:', product);
+          console.log('🔍 PRODUCT FIELDS:', Object.keys(product));
+          console.log('🔍 IMAGE URL FIELDS:', {
+            product_image_url: product.product_image_url,
+          });
           console.log('🔍 AMAZON ECHO DOT DATA:', product.id, product.title, 'target_price:', product.target_price, 'price_goal:', product.price_goal);
           
           // Handle missing title gracefully
           const productTitle = product.title || product.product_name || 'Unknown Product';
           
+          // Get image URL from correct field name and proxy it to avoid CORS
+          const imageUrl = product.product_image_url ? 
+            `https://images.weserv.nl/?url=${encodeURIComponent(product.product_image_url)}` : 
+            '/img/icon.png';
+          console.log('🔍 FINAL IMAGE URL:', imageUrl);
+          console.log('🔍 PRODUCT IMAGE URL TYPE:', typeof imageUrl);
+          console.log('🔍 PRODUCT IMAGE URL LENGTH:', imageUrl ? imageUrl.length : 'null/undefined');
+          
+          // Test if the image URL is accessible
+          if (imageUrl) {
+            fetch(imageUrl, { mode: 'no-cors' })
+              .then(() => console.log('🔍 IMAGE ACCESSIBLE:', imageUrl))
+              .catch((err) => console.log('🔍 IMAGE BLOCKED (CORS):', imageUrl, err));
+          }
+          
           return {
             id: product.id.toString(),
-            imageUrl: product.image_url || ImageService.getFallbackImage(productTitle),
+            imageUrl: imageUrl,
             title: productTitle,
             price: product.current_price || '0',
             originalPrice: parseFloat(product.current_price || '0'), 
@@ -164,6 +164,7 @@ export default function Dashboard() {
       }
       
       // Always use real data from API, even if empty
+      console.log('🔍 SETTING PRODUCTS WITH IMAGEURLS:', convertedProducts.map(p => ({ id: p.id, title: p.title, imageUrl: p.imageUrl })));
       setProducts(convertedProducts);
       
       // Calculate stats
@@ -222,6 +223,9 @@ export default function Dashboard() {
 
   // Filter products based on status and deal status
   const filteredProducts = useMemo(() => {
+    console.log('🔍 PRODUCTS STATE:', products);
+    console.log('🔍 FIRST PRODUCT IMAGEURL:', products[0]?.imageUrl);
+    console.log('🔍 FILTERED PRODUCTS BEFORE RETURN:', products.map(p => ({ id: p.id, title: p.title, imageUrl: p.imageUrl })));
     let filtered = products;
 
     // Apply status filter
@@ -258,6 +262,7 @@ export default function Dashboard() {
         return {
           id: product.id,
           product_name: product.title || 'Unknown Product',
+          imageUrl: product.imageUrl || '',
           price: product.price || '0',
           originalPrice: product.originalPrice, // Preserve originalPrice for API calls
           vendor: product.vendor || 'Unknown',
@@ -266,9 +271,6 @@ export default function Dashboard() {
           status: product.status || 'tracking',
           url: product.url || '#',
           extractedAt: product.extractedAt || new Date().toISOString(),
-          brand: '', // Add default values for missing fields
-          color: '',
-          capacity: '',
           hasAlert: hasAlert, // Add hasAlert property
         };
       } catch (error) {
@@ -432,9 +434,6 @@ export default function Dashboard() {
             status: product.status,
             url: product.url,
             extractedAt: product.extractedAt,
-            brand: '',
-            color: '',
-            capacity: '',
           }))}
           className="mb-6"
         />
@@ -481,56 +480,7 @@ export default function Dashboard() {
 
       {/* Search Results */}
       <SearchResults
-        products={products.map(product => {
-          try {
-            const existingAlert = getExistingAlert(product.id);
-            const finalTargetPrice = existingAlert ? existingAlert.targetPrice?.toString() : product.targetPrice;
-            
-            if (import.meta.env.DEV && product.id === '858') {
-              console.log(`🎯 Product ${product.id} target price mapping:`, {
-                productTargetPrice: product.targetPrice,
-                alertTargetPrice: existingAlert?.targetPrice,
-                finalTargetPrice: finalTargetPrice,
-                hasAlert: productHasAlert(product.id)
-              });
-            }
-            
-            return {
-              id: product.id,
-              product_name: product.title,
-              price: product.price,
-              originalPrice: product.originalPrice?.toString(),
-              vendor: product.vendor,
-              targetPrice: finalTargetPrice,
-              expiresIn: product.expiresIn,
-              status: product.status,
-              url: product.url,
-              extractedAt: product.extractedAt,
-              brand: '',
-              color: '',
-              capacity: '',
-              hasAlert: productHasAlert(product.id),
-            };
-          } catch (error) {
-            console.error('Error processing product for SearchResults:', product.id, error);
-            return {
-              id: product.id,
-              product_name: product.title || 'Unknown Product',
-              price: product.price || '0',
-              originalPrice: product.originalPrice?.toString(),
-              vendor: product.vendor || 'Unknown',
-              targetPrice: product.targetPrice,
-              expiresIn: product.expiresIn,
-              status: product.status || 'tracking',
-              url: product.url || '#',
-              extractedAt: product.extractedAt || new Date().toISOString(),
-              brand: '',
-              color: '',
-              capacity: '',
-              hasAlert: false,
-            };
-          }
-        })}
+        products={products}
         filteredProducts={filteredProducts}
         loading={loading}
         onCreateAlert={handleCreateAlert}

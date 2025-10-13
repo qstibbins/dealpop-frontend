@@ -14,9 +14,6 @@ CREATE TABLE IF NOT EXISTS tracked_products (
   product_url TEXT NOT NULL,
   product_name VARCHAR NOT NULL,
   product_image_url TEXT,
-  brand VARCHAR,
-  color VARCHAR,
-  capacity VARCHAR,
   vendor VARCHAR,
   current_price DECIMAL(10,2),
   target_price DECIMAL(10,2),
@@ -124,4 +121,6 @@ CREATE INDEX IF NOT EXISTS idx_ab_test_events_test_variant ON ab_test_events(tes
 CREATE INDEX IF NOT EXISTS idx_ab_test_events_timestamp ON ab_test_events(timestamp);
 
 -- Full-text search indexes
-CREATE INDEX IF NOT EXISTS idx_tracked_products_search ON tracked_products USING gin(to_tsvector('english', product_name || ' ' || COALESCE(brand, '') || ' ' || COALESCE(vendor, '')));
+-- CREATE INDEX IF NOT EXISTS idx_tracked_products_search ON tracked_products USING gin(to_tsvector('english', product_name || ' ' || COALESCE(brand, '') || ' ' || COALESCE(vendor, '')));
+-- DROP INDEX IF EXISTS idx_tracked_products_search; 
+CREATE INDEX IF NOT EXISTS idx_tracked_products_search ON tracked_products USING gin(to_tsvector('english', product_name || ' ' || COALESCE(vendor, '')));

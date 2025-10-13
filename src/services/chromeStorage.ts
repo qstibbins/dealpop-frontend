@@ -15,9 +15,6 @@ export interface ExtractedProduct {
   id: string;
   product_name: string;
   price: string;
-  color?: string;
-  brand: string;
-  capacity?: string;
   vendor?: string;
   url: string;
   imageUrl?: string; // Add image URL field

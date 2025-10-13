@@ -1,4 +1,3 @@
-import { useImage } from '../hooks/useImage';
 import StatusBadge from './ui/StatusBadge';
 
 type ProductCardProps = {
@@ -33,10 +32,13 @@ export default function ProductCard({
   onCreateAlert,
   onViewProduct,
 }: ProductCardProps) {
-  const { imageState, currentImageUrl, retry } = useImage(imageUrl, title, {
-    optimize: true,
-    preload: false,
-  });
+  // Use the provided image URL or fallback to DP icon
+  console.log('🔍 ProductCard RECEIVED:', { title, imageUrl, imageUrlLength: imageUrl?.length, imageUrlType: typeof imageUrl });
+  const currentImageUrl = imageUrl || '/img/icon.png';
+  console.log('🔍 ProductCard USING URL:', currentImageUrl);
+  const imageState = 'loaded';
+  const isLoading = false;
+  const hasError = false;
 
   // Check if target price threshold has been reached
   const isTargetPriceReached = () => {
@@ -124,13 +126,13 @@ export default function ProductCard({
         
         {/* Image Container with Loading and Error States */}
         <div className="h-40 w-full mb-3 relative bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-          {imageState === 'loading' && (
+          {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           )}
           
-          {imageState === 'error' && (
+          {hasError && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-gray-500">
                 <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,7 +140,7 @@ export default function ProductCard({
                 </svg>
                 <p className="text-xs">Image unavailable</p>
                 <button 
-                  onClick={retry}
+                  onClick={() => window.location.reload()}
                   className="mt-1 text-xs text-blue-600 hover:text-blue-800 underline"
                 >
                   Retry
@@ -154,12 +156,15 @@ export default function ProductCard({
               imageState === 'loaded' ? 'opacity-100' : 'opacity-0'
             }`}
             loading="lazy"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              console.log('Image failed to load:', currentImageUrl);
+              e.currentTarget.src = '/img/icon.png';
+            }}
           />
         </div>
         
-        <h3 className={`text-lg font-semibold mb-1 line-clamp-2 flex-shrink-0 ${
-          targetReached ? 'text-green-800' : 'text-gray-900'
-        }`}>
+        <h3 className="text-lg font-semibold mb-1 line-clamp-2 flex-shrink-0 text-gray-900">
           {title}
         </h3>
         

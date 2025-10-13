@@ -17,12 +17,10 @@ export default function SearchSuggestions({
   useEffect(() => {
     // Generate suggestions from product data
     const vendorSuggestions = [...new Set(products.map(p => p.vendor).filter((vendor): vendor is string => !!vendor))].slice(0, 5);
-    const brandSuggestions = [...new Set(products.map(p => p.brand).filter((brand): brand is string => !!brand))].slice(0, 3);
     const statusSuggestions = ['tracking', 'completed', 'paused'];
     
     const allSuggestions = [
       ...vendorSuggestions,
-      ...brandSuggestions,
       ...statusSuggestions
     ].slice(0, 8);
 

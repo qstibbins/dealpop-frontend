@@ -53,10 +53,7 @@ export class SearchService {
       const query = filters.query.toLowerCase().trim();
       filtered = filtered.filter(product => 
         product.product_name.toLowerCase().includes(query) ||
-        product.vendor?.toLowerCase().includes(query) ||
-        product.brand?.toLowerCase().includes(query) ||
-        product.color?.toLowerCase().includes(query) ||
-        product.capacity?.toLowerCase().includes(query)
+        product.vendor?.toLowerCase().includes(query)
       );
     }
 

@@ -6,7 +6,7 @@ interface SearchResultsProps {
   filteredProducts: ExtractedProduct[];
   loading: boolean;
   className?: string;
-  onCreateAlert?: (product: any) => void;
+  onCreateAlert?: (product: ExtractedProduct) => void;
   onViewProduct?: (url: string) => void;
   isSmartSortingActive?: boolean;
 }
@@ -103,14 +103,12 @@ export default function SearchResults({
           <div key={product.id}>
             <ProductCard
               id={product.id}
-              imageUrl={`${import.meta.env.BASE_URL}img/laptop.png`} // Default image
+              imageUrl={product.imageUrl || ''}
               title={product.product_name}
-              price={product.price}
+              price={product.price || '0'}
               vendor={product.vendor || 'Unknown'}
-              targetPrice={product.targetPrice}
-              previousPrice={product.previousPrice}
-              originalPrice={product.originalPrice}
-              expiresIn={product.expiresIn}
+              targetPrice={product.targetPrice || ''}
+              expiresIn={product.expiresIn || 'No expiration'}
               status={product.status}
               url={product.url}
               extractedAt={product.extractedAt}

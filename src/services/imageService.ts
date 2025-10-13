@@ -6,53 +6,6 @@ export interface ImageConfig {
 }
 
 export class ImageService {
-  private static readonly FALLBACK_IMAGES = {
-    default: 'img/DealPop_Horizontal_logo.png',
-    laptop: 'img/laptop.png',
-    headphones: 'img/headphones.png',
-    sofa: 'img/sofa.png',
-    watch: 'img/watch.png',
-    skincare: 'img/skincare.png',
-    powerbank: 'img/powerbank.png',
-    mixer: 'img/mixer.png',
-  };
-
-  /**
-   * Get fallback image based on product name
-   */
-  static getFallbackImage(productName: string): string {
-    if (!productName || typeof productName !== 'string') {
-      return this.FALLBACK_IMAGES.default;
-    }
-    const title = productName.toLowerCase();
-    
-    let fallbackPath: string;
-    
-    if (title.includes('laptop') || title.includes('computer') || title.includes('pc')) {
-      fallbackPath = this.FALLBACK_IMAGES.laptop;
-    } else if (title.includes('headphone') || title.includes('audio') || title.includes('speaker')) {
-      fallbackPath = this.FALLBACK_IMAGES.headphones;
-    } else if (title.includes('sofa') || title.includes('chair') || title.includes('furniture')) {
-      fallbackPath = this.FALLBACK_IMAGES.sofa;
-    } else if (title.includes('watch') || title.includes('smartwatch')) {
-      fallbackPath = this.FALLBACK_IMAGES.watch;
-    } else if (title.includes('skincare') || title.includes('beauty') || title.includes('cosmetic')) {
-      fallbackPath = this.FALLBACK_IMAGES.skincare;
-    } else if (title.includes('power') || title.includes('battery') || title.includes('charger')) {
-      fallbackPath = this.FALLBACK_IMAGES.powerbank;
-    } else if (title.includes('mixer') || title.includes('blender') || title.includes('kitchen')) {
-      fallbackPath = this.FALLBACK_IMAGES.mixer;
-    } else {
-      // Default fallback
-      fallbackPath = this.FALLBACK_IMAGES.default;
-    }
-    
-    // Construct full URL with base URL
-    const baseUrl = import.meta.env.BASE_URL || '/';
-    const fullUrl = `${baseUrl}${fallbackPath}`;
-    
-    return fullUrl;
-  }
 
   /**
    * Optimize image URL for better performance
@@ -131,9 +84,9 @@ export class ImageService {
   /**
    * Get optimized image URL for product cards
    */
-  static getProductCardImage(imageUrl: string, productName: string): string {
+  static getProductCardImage(imageUrl: string): string {
     if (!this.isValidImageUrl(imageUrl)) {
-      return this.getFallbackImage(productName);
+      return 'img/icon.png';
     }
 
     const optimizedUrl = this.optimizeImageUrl(imageUrl, {
