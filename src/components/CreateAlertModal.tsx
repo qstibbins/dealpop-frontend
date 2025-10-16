@@ -65,6 +65,11 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
     try {
       // Delete the product (which will cascade to delete associated alerts)
       await apiAdapter.deleteProduct(existingAlert.productId.toString());
+      
+      // Trigger product refresh in Dashboard via custom event
+      console.log('🔄 Triggering product refresh after product deletion');
+      window.dispatchEvent(new CustomEvent('refreshProducts'));
+      
       setShowDeleteConfirm(false);
       onClose();
     } catch (error) {
