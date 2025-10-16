@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Alert } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
+import { apiAdapter } from '../services/apiAdapter';
 import Modal from './ui/Modal';
 import { validateTargetPrice } from '../utils/alertValidation';
 import { formatPrice } from '../utils/priceFormatting';
@@ -95,11 +96,22 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
     setLoading(true);
     try {
       if (existingAlert) {
+        // Map alert status to product status for the API
+        let productStatus = 'tracking'; // default
+        if (formData.status === 'active') {
+          productStatus = 'tracking';
+        } else if (formData.status === 'paused') {
+          productStatus = 'paused';
+        } else if (formData.status === 'completed') {
+          productStatus = 'completed';
+        }
+        
         // Update existing tracked product
         await updateAlert(existingAlert.productId.toString(), {
           targetPrice: parseFloat(formData.targetPrice),
           alertType: formData.alertType,
           status: formData.status,
+          productStatus: productStatus, // Add product status for API
         });
       } else {
         // Create new alert
@@ -236,16 +248,27 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
                 <input
                   type="radio"
                   name="alertAction"
-                  value="dismissed"
-                  checked={formData.status === 'dismissed'}
+                  value="paused"
+                  checked={formData.status === 'paused'}
                   onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Alert['status'] }))}
                   className="mr-3"
                 />
-                <span className="text-sm">Stop tracking (Dismiss)</span>
+                <span className="text-sm">Pause tracking (Paused)</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="alertAction"
+                  value="completed"
+                  checked={formData.status === 'completed'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Alert['status'] }))}
+                  className="mr-3"
+                />
+                <span className="text-sm">Mark as purchased (Completed)</span>
               </label>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Choose whether to continue tracking this product or stop the alert
+              Choose how to manage this product tracking
             </p>
           </div>
         )}
@@ -262,10 +285,11 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
             <button
               type="button"
               onClick={async () => {
-                if (window.confirm('Are you sure you want to remove this alert? This action cannot be undone.')) {
+                if (window.confirm('Are you sure you want to remove this alert? This will permanently delete the tracked product and cannot be undone.')) {
                   setLoading(true);
                   try {
-                    await updateAlert(existingAlert.productId.toString(), { status: 'dismissed' });
+                    // Delete the product (which will cascade to delete associated alerts)
+                    await apiAdapter.deleteProduct(existingAlert.productId.toString());
                     onClose();
                   } catch (error) {
                     console.error('Failed to remove alert:', error);

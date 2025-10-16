@@ -122,6 +122,9 @@ class ApiService {
     if (data.status !== undefined) {
       productUpdateData.status = data.status;
     }
+    if (data.productStatus !== undefined) {
+      productUpdateData.status = data.productStatus;
+    }
     
     console.log('🔍 UPDATING PRODUCT:', productId, 'WITH DATA:', productUpdateData);
     

@@ -8,7 +8,7 @@ export interface Alert {
   currentPrice: number;
   targetPrice: number;
   alertType: 'price_drop' | 'price_increase' | 'stock_alert' | 'expiry_alert';
-  status: 'active' | 'triggered' | 'dismissed' | 'expired';
+  status: 'active' | 'triggered' | 'dismissed' | 'expired' | 'paused' | 'completed';
   notificationPreferences: {
     email: boolean;
     push: boolean;
