@@ -4,7 +4,6 @@ import { useAlerts } from '../contexts/AlertContext';
 import { apiAdapter } from '../services/apiAdapter';
 import Modal from './ui/Modal';
 import ConfirmDialog from './ui/ConfirmDialog';
-import { validateTargetPrice } from '../utils/alertValidation';
 import { formatPrice } from '../utils/priceFormatting';
 
 interface CreateAlertModalProps {
@@ -34,7 +33,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
   });
 
   // Validation function using the utility
-  const validateTargetPriceInput = (targetPrice: string, currentPrice: number) => {
+  const validateTargetPriceInput = (targetPrice: string) => {
     const target = parseFloat(targetPrice);
     
     // Only validate for invalid inputs
@@ -126,9 +125,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
     if (!productData) return;
 
     // Validate target price before submission
-    const currentPrice = productData.currentPrice;
-    
-    const error = validateTargetPriceInput(formData.targetPrice, currentPrice);
+    const error = validateTargetPriceInput(formData.targetPrice);
     if (error) {
       setValidationError(error);
       return;
@@ -137,22 +134,11 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
     setLoading(true);
     try {
       if (existingAlert) {
-        // Map alert status to product status for the API
-        let productStatus = 'tracking'; // default
-        if (formData.status === 'active') {
-          productStatus = 'tracking';
-        } else if (formData.status === 'paused') {
-          productStatus = 'paused';
-        } else if (formData.status === 'completed') {
-          productStatus = 'completed';
-        }
-        
         // Update existing tracked product
         await updateAlert(existingAlert.productId.toString(), {
           targetPrice: parseFloat(formData.targetPrice),
           alertType: formData.alertType,
           status: formData.status,
-          productStatus: productStatus, // Add product status for API
         });
       } else {
         // Create new alert
@@ -224,7 +210,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
               const newValue = e.target.value;
               setFormData(prev => ({ ...prev, targetPrice: newValue }));
               if (productData) {
-                setValidationError(validateTargetPriceInput(newValue, productData.currentPrice));
+                setValidationError(validateTargetPriceInput(newValue));
               }
             }}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
