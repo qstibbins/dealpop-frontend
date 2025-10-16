@@ -20,13 +20,14 @@ interface CreateAlertModalProps {
 }
 
 export default function CreateAlertModal({ isOpen, onClose, productData, existingAlert }: CreateAlertModalProps) {
-  const { createAlert, updateAlert, alertPreferences } = useAlerts();
+  const { createAlert, updateAlert } = useAlerts();
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     targetPrice: productData?.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '',
     alertType: 'price_drop' as Alert['alertType'],
     trackingPeriod: '30' as string,
+    status: 'active' as Alert['status'],
   });
 
   // Validation function using the utility
@@ -43,6 +44,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
         targetPrice: productData.targetPrice || existingAlert.targetPrice.toString(),
         alertType: existingAlert.alertType,
         trackingPeriod: '30', // Default to 30 days for existing alerts
+        status: existingAlert.status,
       });
       // Clear validation error when editing existing alert
       setValidationError(null);
@@ -70,11 +72,12 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
         targetPrice: finalTargetPrice,
         alertType: 'price_drop' as Alert['alertType'],
         trackingPeriod: '30',
+        status: 'active' as Alert['status'],
       });
       // Clear validation error when product data changes
       setValidationError(null);
     }
-  }, [productData, existingAlert, alertPreferences]);
+  }, [productData, existingAlert]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +99,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
         await updateAlert(existingAlert.productId.toString(), {
           targetPrice: parseFloat(formData.targetPrice),
           alertType: formData.alertType,
+          status: formData.status,
         });
       } else {
         // Create new alert
@@ -209,6 +213,28 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
             </label>
           </div>
         </div>
+
+        {/* Status Section - Only show when editing existing alert */}
+        {existingAlert && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Alert Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Alert['status'] }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="active">Active (Tracking)</option>
+              <option value="triggered">Triggered (Deal Found)</option>
+              <option value="dismissed">Dismissed</option>
+              <option value="expired">Expired</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Change the status to control how this alert behaves
+            </p>
+          </div>
+        )}
 
         <div className="flex space-x-3 pt-4">
           <button
