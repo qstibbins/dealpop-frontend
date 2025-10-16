@@ -3,6 +3,7 @@ import { Alert } from '../types/alerts';
 import { useAlerts } from '../contexts/AlertContext';
 import { apiAdapter } from '../services/apiAdapter';
 import Modal from './ui/Modal';
+import ConfirmDialog from './ui/ConfirmDialog';
 import { validateTargetPrice } from '../utils/alertValidation';
 import { formatPrice } from '../utils/priceFormatting';
 
@@ -24,6 +25,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
   const { createAlert, updateAlert } = useAlerts();
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
     targetPrice: productData?.currentPrice ? (productData.currentPrice * 0.9).toFixed(2) : '',
     alertType: 'price_drop' as Alert['alertType'],
@@ -54,6 +56,23 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
   const isTargetPriceDisabled = isTargetReached || 
     formData.status === 'completed' || 
     formData.status === 'paused';
+
+  // Handle delete confirmation
+  const handleConfirmDelete = async () => {
+    if (!existingAlert) return;
+    
+    setLoading(true);
+    try {
+      // Delete the product (which will cascade to delete associated alerts)
+      await apiAdapter.deleteProduct(existingAlert.productId.toString());
+      setShowDeleteConfirm(false);
+      onClose();
+    } catch (error) {
+      console.error('Failed to remove alert:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Initialize form with existing alert data if editing
   useEffect(() => {
@@ -312,20 +331,7 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
           {existingAlert && (
             <button
               type="button"
-              onClick={async () => {
-                if (window.confirm('Are you sure you want to remove this alert? This will permanently delete the tracked product and cannot be undone.')) {
-                  setLoading(true);
-                  try {
-                    // Delete the product (which will cascade to delete associated alerts)
-                    await apiAdapter.deleteProduct(existingAlert.productId.toString());
-                    onClose();
-                  } catch (error) {
-                    console.error('Failed to remove alert:', error);
-                  } finally {
-                    setLoading(false);
-                  }
-                }
-              }}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
               className="px-4 py-2 text-red-700 bg-red-100 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50"
             >
@@ -342,5 +348,18 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
         </div>
       </form>
     </Modal>
+
+    {/* Delete Confirmation Dialog */}
+    <ConfirmDialog
+      isOpen={showDeleteConfirm}
+      onClose={() => setShowDeleteConfirm(false)}
+      onConfirm={handleConfirmDelete}
+      title="Remove Alert"
+      message="Are you sure you want to remove this alert? This will permanently delete the tracked product and cannot be undone."
+      confirmText="Remove Alert"
+      cancelText="Cancel"
+      variant="danger"
+      loading={loading}
+    />
   );
 } 
