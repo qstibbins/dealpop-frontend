@@ -67,8 +67,8 @@ export default function Dashboard() {
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const { alerts, getAlertStats } = useAlerts();
-  const alertStats = getAlertStats();
+  const { alerts } = useAlerts();
+  // const alertStats = getAlertStats(); // Removed since alerts icon is hidden
   
   // Helper function to check if product has an alert
   const productHasAlert = useCallback((productId: string) => {
@@ -364,7 +364,8 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <button
+            {/* Alerts icon hidden */}
+            {/* <button
               onClick={() => setShowAlertModal(true)}
               className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
               title="View Deal Alerts"
@@ -375,7 +376,7 @@ export default function Dashboard() {
                   {alertStats.triggered}
                 </span>
               )}
-            </button>
+            </button> */}
           </div>
         </div>
         
