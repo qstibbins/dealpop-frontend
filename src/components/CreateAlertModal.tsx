@@ -185,27 +185,28 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={existingAlert ? "Update Price Alert" : "Create Price Alert"}
-      size="md"
-    >
-      {productData && (
-        <div className="flex items-center space-x-3 mb-4 p-3 bg-gray-50 rounded">
-          <img 
-            src={productData.image} 
-            alt={productData.name} 
-            className="h-12 w-12 object-contain"
-          />
-          <div>
-            <h3 className="font-semibold text-sm">{productData.name}</h3>
-            <p className="text-sm text-gray-600">{formatPrice(productData.currentPrice)}</p>
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={existingAlert ? "Update Price Alert" : "Create Price Alert"}
+        size="md"
+      >
+        {productData && (
+          <div className="flex items-center space-x-3 mb-4 p-3 bg-gray-50 rounded">
+            <img 
+              src={productData.image} 
+              alt={productData.name} 
+              className="h-12 w-12 object-contain"
+            />
+            <div>
+              <h3 className="font-semibold text-sm">{productData.name}</h3>
+              <p className="text-sm text-gray-600">{formatPrice(productData.currentPrice)}</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Target Price
@@ -347,19 +348,20 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
           </button>
         </div>
       </form>
-    </Modal>
+      </Modal>
 
-    {/* Delete Confirmation Dialog */}
-    <ConfirmDialog
-      isOpen={showDeleteConfirm}
-      onClose={() => setShowDeleteConfirm(false)}
-      onConfirm={handleConfirmDelete}
-      title="Remove Alert"
-      message="Are you sure you want to remove this alert? This will permanently delete the tracked product and cannot be undone."
-      confirmText="Remove Alert"
-      cancelText="Cancel"
-      variant="danger"
-      loading={loading}
-    />
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        title="Remove Alert"
+        message="Are you sure you want to remove this alert? This will permanently delete the tracked product and cannot be undone."
+        confirmText="Remove Alert"
+        cancelText="Cancel"
+        variant="danger"
+        loading={loading}
+      />
+    </>
   );
 } 
