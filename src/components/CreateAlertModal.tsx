@@ -214,24 +214,38 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
           </div>
         </div>
 
-        {/* Status Section - Only show when editing existing alert */}
+        {/* Alert Actions - Only show when editing existing alert */}
         {existingAlert && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Alert Status
+              Alert Actions
             </label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Alert['status'] }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="active">Active (Tracking)</option>
-              <option value="triggered">Triggered (Deal Found)</option>
-              <option value="dismissed">Dismissed</option>
-              <option value="expired">Expired</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">
-              Change the status to control how this alert behaves
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="alertAction"
+                  value="active"
+                  checked={formData.status === 'active'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Alert['status'] }))}
+                  className="mr-3"
+                />
+                <span className="text-sm">Keep tracking (Active)</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="alertAction"
+                  value="dismissed"
+                  checked={formData.status === 'dismissed'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Alert['status'] }))}
+                  className="mr-3"
+                />
+                <span className="text-sm">Stop tracking (Dismiss)</span>
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Choose whether to continue tracking this product or stop the alert
             </p>
           </div>
         )}
@@ -244,6 +258,28 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
           >
             Cancel
           </button>
+          {existingAlert && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (window.confirm('Are you sure you want to remove this alert? This action cannot be undone.')) {
+                  setLoading(true);
+                  try {
+                    await updateAlert(existingAlert.productId.toString(), { status: 'dismissed' });
+                    onClose();
+                  } catch (error) {
+                    console.error('Failed to remove alert:', error);
+                  } finally {
+                    setLoading(false);
+                  }
+                }
+              }}
+              disabled={loading}
+              className="px-4 py-2 text-red-700 bg-red-100 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50"
+            >
+              Remove Alert
+            </button>
+          )}
           <button
             type="submit"
             disabled={loading}
