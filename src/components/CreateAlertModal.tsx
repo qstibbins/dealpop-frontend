@@ -34,9 +34,26 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
   // Validation function using the utility
   const validateTargetPriceInput = (targetPrice: string, currentPrice: number) => {
     const target = parseFloat(targetPrice);
-    const validation = validateTargetPrice(target, currentPrice);
-    return validation.isValid ? null : validation.errors[0]?.message || 'Invalid target price';
+    
+    // Only validate for invalid inputs
+    if (isNaN(target) || target <= 0) {
+      return 'Target price must be a positive number';
+    }
+    
+    // Remove the "target must be less than current" validation
+    // Users should be able to set any reasonable target price
+    
+    return null;
   };
+
+  // Check if target price has been reached
+  const isTargetReached = productData && formData.targetPrice && 
+    parseFloat(formData.targetPrice) >= productData.currentPrice;
+
+  // Check if target price editing should be disabled
+  const isTargetPriceDisabled = isTargetReached || 
+    formData.status === 'completed' || 
+    formData.status === 'paused';
 
   // Initialize form with existing alert data if editing
   useEffect(() => {
@@ -187,11 +204,22 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
             }}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               validationError ? 'border-red-500' : 'border-gray-300'
-            }`}
+            } ${isTargetPriceDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            disabled={isTargetPriceDisabled}
             required
           />
           {validationError && (
             <p className="text-red-500 text-sm mt-1">{validationError}</p>
+          )}
+          {isTargetReached && (
+            <p className="text-green-600 text-sm mt-1">
+              ✅ Target price reached! You can pause, mark as purchased, or remove this alert.
+            </p>
+          )}
+          {(formData.status === 'completed' || formData.status === 'paused') && !isTargetReached && (
+            <p className="text-blue-600 text-sm mt-1">
+              Target price cannot be changed for {formData.status === 'completed' ? 'completed' : 'paused'} deals.
+            </p>
           )}
         </div>
 
