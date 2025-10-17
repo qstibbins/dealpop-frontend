@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { authAdapter } from '../services/authAdapter';
+import { apiService } from '../services/api';
 
 // Get Chrome extension ID from environment
 const EXTENSION_ID = import.meta.env.VITE_EXTENSION_ID;
@@ -81,6 +82,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (message.type === 'EXTENSION_LOGOUT') {
         console.log('🔍 Received logout message from extension');
         handleExtensionLogout();
+      } else if (message.type === 'EXTENSION_TOKEN_REFRESH_REQUEST') {
+        console.log('🔍 Received token refresh request from extension via window message');
+        handleTokenRefreshRequest((response: any) => {
+          // Send response back via postMessage
+          window.postMessage({
+            type: 'EXTENSION_TOKEN_REFRESH_RESPONSE',
+            ...response
+          }, window.location.origin);
+        });
       }
     };
 
@@ -90,6 +100,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('🔍 Received logout message from extension via Chrome API');
         handleExtensionLogout();
         sendResponse({ success: true });
+      } else if (message.type === 'EXTENSION_TOKEN_REFRESH_REQUEST') {
+        console.log('🔍 Received token refresh request from extension');
+        handleTokenRefreshRequest(sendResponse);
       }
     };
 
@@ -118,6 +131,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('✅ Dashboard user signed out due to extension logout');
     } catch (error) {
       console.error('❌ Failed to sign out dashboard user:', error);
+    }
+  };
+
+  /**
+   * Handle token refresh request from extension
+   */
+  const handleTokenRefreshRequest = async (sendResponse: any) => {
+    console.log('🔍 Handling token refresh request from extension');
+    
+    try {
+      // Check if user is authenticated
+      if (!user) {
+        console.log('❌ No authenticated user, cannot refresh token');
+        sendResponse({ 
+          success: false, 
+          error: 'User not authenticated',
+          requiresReauth: true 
+        });
+        return;
+      }
+
+      // Get fresh token
+      const { token, expiresAt } = await apiService.refreshTokenForExtension();
+      
+      console.log('✅ Token refreshed successfully, expires at:', new Date(expiresAt));
+      
+      sendResponse({ 
+        success: true, 
+        token, 
+        expiresAt,
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL
+        }
+      });
+    } catch (error) {
+      console.error('❌ Failed to refresh token:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Token refresh failed',
+        requiresReauth: true 
+      });
     }
   };
 

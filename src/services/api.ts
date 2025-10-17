@@ -2,10 +2,40 @@ import { getAuth } from 'firebase/auth';
 import { API_CONFIG } from '../config/api';
 
 class ApiService {
-  private async getAuthToken(): Promise<string> {
+  private tokenCache: { token: string; expiresAt: number } | null = null;
+  private readonly TOKEN_REFRESH_BUFFER = 5 * 60 * 1000; // 5 minutes before expiry
+
+  private async getAuthToken(forceRefresh: boolean = false): Promise<string> {
     const user = getAuth().currentUser;
     if (!user) throw new Error('User not authenticated');
-    return await user.getIdToken();
+
+    // Check if we have a cached token that's still valid
+    if (!forceRefresh && this.tokenCache && Date.now() < this.tokenCache.expiresAt) {
+      return this.tokenCache.token;
+    }
+
+    // Get fresh token from Firebase
+    const token = await user.getIdToken(forceRefresh);
+    
+    // Parse token to get expiration time
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiresAt = payload.exp * 1000 - this.TOKEN_REFRESH_BUFFER;
+      
+      // Cache the token
+      this.tokenCache = { token, expiresAt };
+      
+      console.log('🔄 Token refreshed, expires at:', new Date(payload.exp * 1000));
+    } catch (error) {
+      console.warn('⚠️ Could not parse token expiration, not caching');
+    }
+
+    return token;
+  }
+
+  // Public method for extension to request fresh tokens
+  async getFreshToken(): Promise<string> {
+    return this.getAuthToken(true);
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -217,6 +247,17 @@ class ApiService {
   // Stats and Analytics API
   async getStats() {
     return this.request('/api/stats');
+  }
+
+  // Token refresh endpoint for extension
+  async refreshTokenForExtension(): Promise<{ token: string; expiresAt: number }> {
+    const token = await this.getFreshToken();
+    
+    // Parse token to get expiration time
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiresAt = payload.exp * 1000;
+    
+    return { token, expiresAt };
   }
 }
 
