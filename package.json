@@ -7,8 +7,11 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "build:prod": "tsc && vite build --mode production",
+    "build:beta": "tsc && vite build --mode production",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "deploy:landing": "cp index.html dist/ && aws s3 sync dist/ s3://your-bucket-name --delete",
+    "deploy:beta": "npm run build:beta && cp beta-index.html dist/index.html && aws s3 sync dist/ s3://your-bucket-name/beta/ --delete",
     "deploy:s3": "npm run build:prod && aws s3 sync dist/ s3://your-bucket-name --delete"
   },
   "dependencies": {

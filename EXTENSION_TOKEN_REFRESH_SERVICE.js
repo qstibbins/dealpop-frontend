@@ -200,7 +200,7 @@ class ExtensionTokenRefreshService {
 /*
 // Initialize the service
 const tokenService = new ExtensionTokenRefreshService(
-  'https://www.dealpop.co', // Your dashboard URL - USE WWW VERSION
+  'https://www.dealpop.co/beta', // Your dashboard URL - USE WWW VERSION WITH BETA PATH
   chrome.runtime.id // Your extension ID
 );
 
