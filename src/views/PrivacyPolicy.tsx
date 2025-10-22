@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
         </div>
 
         {/* Content */}
-        <div className="space-y-8 text-xs leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+        <div className="space-y-8 text-sm leading-relaxed" style={{ fontFamily: 'system-ui' }}>
           {/* Section 1 */}
           <section>
             <h3 className="text-lg font-bold mb-4" style={{ color: '#da4f74', fontFamily: 'Aptos Display Bold, system-ui' }}>1. Introduction</h3>
