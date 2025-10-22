@@ -6,6 +6,7 @@ import Sidebar from './layout/Sidebar';
 import Dashboard from './views/Dashboard';
 import Login from './views/Login';
 import LandingPage from './views/LandingPage';
+import PrivacyPolicy from './views/PrivacyPolicy';
 import Settings from './views/Settings';
 import './styles/theme.css'
 
@@ -16,6 +17,9 @@ function App() {
         <Routes>
           {/* Landing page at root - no layout wrapper */}
           <Route path="/" element={<LandingPage />} />
+          
+          {/* Privacy Policy - accessible to all */}
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           
           {/* Beta routes - always show login page */}
           <Route path="/beta" element={<Login />} />
