@@ -30,7 +30,7 @@ export default function Sidebar() {
       {/* White background logo section */}
       <div className="bg-white p-4 mb-0">
         <img 
-          src="/beta/img/DealPop_Horizontal_logo.png" 
+          src="/img/DealPop_Horizontal_logo.png" 
           alt="DealPop" 
           className="w-full h-auto"
         />
