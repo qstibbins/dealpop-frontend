@@ -84,11 +84,11 @@ export default function Modal({
     >
       <div
         ref={modalRef}
-        className={`bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} mx-auto max-h-[90vh] overflow-y-auto`}
+        className={`bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} mx-auto max-h-[90vh] flex flex-col`}
         role="document"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
             {title}
           </h2>
@@ -106,7 +106,7 @@ export default function Modal({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1 min-h-0">
           {children}
         </div>
       </div>
