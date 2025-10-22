@@ -71,7 +71,7 @@ export default function Login() {
               <img 
                 src={DealPopLogo} 
                 alt="DealPop" 
-                className="h-64 w-auto mx-auto"
+                className="h-96 w-auto mx-auto"
               />
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function Login() {
             <img 
               src={DealPopLogo} 
               alt="DealPop" 
-              className="h-64 w-auto mx-auto"
+              className="h-96 w-auto mx-auto"
             />
           </div>
         </div>
@@ -330,7 +330,7 @@ export default function Login() {
           <img 
             src={DealPopLogo} 
             alt="DealPop" 
-            className="h-64 w-auto mx-auto"
+            className="h-96 w-auto mx-auto"
           />
         </div>
       </div>
