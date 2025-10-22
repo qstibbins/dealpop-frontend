@@ -1,7 +1,12 @@
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 
-export default function ProtectedRoute({ children }: { children: JSX.Element }) {
+interface ProtectedRouteProps {
+  children: JSX.Element;
+  fallback?: JSX.Element;
+}
+
+export default function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -16,7 +21,13 @@ export default function ProtectedRoute({ children }: { children: JSX.Element }) 
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    // Check if we're on /beta route and show login with current URL params preserved
+    const currentPath = window.location.pathname;
+    if (currentPath === '/beta') {
+      // Preserve URL parameters (like ?extension=true) when showing login
+      return fallback || <Navigate to={`/login${window.location.search}`} />;
+    }
+    return fallback || <Navigate to="/login" />;
   }
 
   return children;

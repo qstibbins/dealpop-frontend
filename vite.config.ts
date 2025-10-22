@@ -5,11 +5,10 @@ import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, command }) => {
   const isDev = command === 'serve'
-  const isBeta = process.env.BUILD_TARGET === 'beta'
   
   return {
     plugins: [react()],
-    base: isBeta ? '/beta/' : '/',
+    base: '/', // Always use root path since we're serving everything from root
     root: '.',
     publicDir: 'public',
     server: {
@@ -19,10 +18,7 @@ export default defineConfig(({ mode, command }) => {
     build: {
       outDir: 'dist',
       rollupOptions: {
-        input: {
-          main: resolve(__dirname, 'index.html'),
-          beta: resolve(__dirname, 'beta-index.html')
-        }
+        input: resolve(__dirname, 'index.html')
       }
     }
   }

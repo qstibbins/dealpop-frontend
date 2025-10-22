@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:beta": "vite --open /beta/",
     "build": "tsc && vite build",
-    "build:beta": "tsc && BUILD_TARGET=beta vite build --mode production",
+    "build:beta": "tsc && vite build --mode production",
+    "build:timestamped": "tsc && vite build --mode production && node scripts/build-with-timestamp.js",
+    "deploy": "npm run build && aws s3 sync dist/ s3://dealpopfrontend --delete",
+    "deploy:safe": "npm run build:timestamped && node scripts/deploy-safe.js",
+    "rollback": "node scripts/rollback.js",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "preview:beta": "vite preview --open /beta/"
+    "preview": "vite preview"
   },
   "dependencies": {
     "firebase": "^12.0.0",

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DealPop - Coming Soon</title>
+    <link rel="icon" type="image/png" href="icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        .logo {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .launch-text {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            font-weight: 400;
+            margin-bottom: 20px;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        .cta-link {
+            display: inline-block;
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            font-weight: 600;
+            color: white;
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 4px;
+            margin-bottom: 40px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .cta-link:hover {
+            color: #fbbf24;
+            text-decoration-color: #fbbf24;
+            transform: translateY(-2px);
+        }
+
+        .arrow-decoration {
+            position: absolute;
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80px;
+            height: 80px;
+            opacity: 0.8;
+        }
+
+        .arrow-path {
+            stroke: #ef4444;
+            stroke-width: 3;
+            stroke-dasharray: 5, 5;
+            fill: none;
+            stroke-linecap: round;
+        }
+
+        .arrow-head {
+            fill: #ef4444;
+        }
+
+        .closing-text {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-weight: 700;
+            margin-top: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .arrow-decoration {
+                display: none;
+            }
+            
+            .container {
+                padding: 20px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 3rem;
+            }
+            
+            .launch-text {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animation for the arrow */
+        @keyframes drawArrow {
+            0% {
+                stroke-dashoffset: 100;
+            }
+            100% {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .arrow-path {
+            animation: drawArrow 2s ease-in-out forwards;
+            stroke-dashoffset: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="logo">DealPop</h1>
+        <div class="launch-text">Launching Fall 2025!</div>
+        <p class="subtitle">If you love a deal, we'd love to connect!</p>
+        <a href="mailto:hello@dealpop.co" class="cta-link">Introduce yourself here.</a>
+        <p class="closing-text">We're excited to meet you!</p>
+        
+        <!-- Decorative arrow -->
+        <svg class="arrow-decoration" viewBox="0 0 100 100">
+            <path class="arrow-path" d="M20,60 Q40,40 60,60 Q80,80 85,75" />
+            <polygon class="arrow-head" points="85,75 90,70 90,80" />
+        </svg>
+    </div>
+
+    <script>
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctaLink = document.querySelector('.cta-link');
+            
+            ctaLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Add a subtle animation
+                this.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
+                
+                // Open email client
+                window.location.href = 'mailto:hello@dealpop.co?subject=Hello from DealPop Landing Page';
+            });
+        });
+    </script>
+</body>
+</html> 
