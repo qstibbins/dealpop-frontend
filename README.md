@@ -1,239 +1,166 @@
-# DealPop Frontend
+# DealPop - Price Tracking & Deal Discovery Platform
 
-A modern React application built with Vite, TypeScript, and Tailwind CSS for displaying product deals and tracking prices. Features a two-tier deployment structure with a landing page and beta application.
+DealPop is a comprehensive price tracking and deal discovery platform that helps users monitor product prices across multiple retailers and get notified when prices drop. The platform consists of a web dashboard, Chrome extension, backend API, and automated price checking service.
 
-## Features
+## What DealPop Does
 
-- 🚀 Built with Vite for fast development and building
-- ⚛️ React 18 with TypeScript for type safety
-- 🎨 Tailwind CSS for styling with custom theme
-- 📱 Responsive design with mobile-first approach
-- 🔄 Hot module replacement for development
-- 🌐 Two-tier deployment: Landing page + Beta app
-- 🔐 Firebase authentication integration
-- 📊 Price tracking and deal alerts
-- 🛒 Chrome extension integration
+DealPop helps users save money by:
+- **Tracking Product Prices**: Monitor prices of products you want to buy
+- **Price Drop Alerts**: Get notified via email/SMS when prices fall below your target
+- **Chrome Extension**: Easily add products to track while browsing shopping sites
+- **Multi-Retailer Support**: Track products from Amazon, Target, Walmart, and more
+- **Smart Notifications**: Receive alerts only when prices drop significantly
+
+## System Architecture
+
+DealPop consists of four main components working together:
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Chrome        │    │   Frontend      │    │   Backend API   │
+│   Extension     │◄──►│   Dashboard     │◄──►│   (Node.js)     │
+│   (Scraping)    │    │   (React)       │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Product       │    │   Firebase      │    │   PostgreSQL    │
+│   Websites      │    │   Auth          │    │   Database      │
+│   (Amazon, etc) │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │                       ▲
+                                │                       │
+                                ▼                       │
+                       ┌─────────────────┐              │
+                       │   Price Checker │──────────────┘
+                       │   (Cron Job)    │
+                       └─────────────────┘
+```
+
+## Quick Start Guide
+
+### For Developers
+1. **Frontend Development**: See [docs/FRONTEND.md](./docs/FRONTEND.md) for React dashboard setup
+2. **Backend Development**: See the `deal-pop/backend-api` repository for Node.js API setup
+3. **Chrome Extension**: See the `deal-pop/chrome-extension` repository for extension development
+4. **Price Checker**: See the `deal-pop/puppeteer-scraper` repository for scraping service setup
+
+### For Project Owners
+- **System Overview**: See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for complete system design
+- **AWS Deployment**: See [docs/AWS_DEPLOYMENT.md](./docs/AWS_DEPLOYMENT.md) for infrastructure setup
+- **Contributing**: See [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) for development guidelines
+
+### For New Contributors
+1. Read the [Contributing Guide](./docs/CONTRIBUTING.md)
+2. Set up your development environment following the repository-specific guides
+3. Review the [Architecture Documentation](./docs/ARCHITECTURE.md) to understand system relationships
+
+## Repository Structure
+
+This repository contains the **Frontend Dashboard** component. The complete DealPop system includes:
+
+| Repository | Purpose | Documentation |
+|------------|---------|---------------|
+| **dealpop-frontend** (this repo) | React dashboard for managing tracked products | [docs/FRONTEND.md](./docs/FRONTEND.md) |
+| **deal-pop/backend-api** | Node.js REST API with PostgreSQL database | See backend repository |
+| **deal-pop/chrome-extension** | Chrome extension for product scraping | See extension repository |
+| **deal-pop/puppeteer-scraper** | Automated price checking service | See scraper repository |
+
+## Key Features
+
+- 🚀 **Modern React Stack**: Built with Vite, TypeScript, and Tailwind CSS
+- ⚛️ **Real-time Updates**: Live product tracking and price monitoring
+- 🎨 **Responsive Design**: Mobile-first approach with beautiful UI
+- 🔐 **Secure Authentication**: Firebase Auth with Google OAuth
+- 📊 **Comprehensive Dashboard**: Product management, alerts, and analytics
+- 🛒 **Chrome Extension Integration**: Seamless product addition from any website
+- 🌐 **Production Ready**: AWS deployment with rollback capabilities
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (version 16 or higher)
+- Node.js (version 18 or higher)
 - npm or yarn
 - AWS CLI (for deployment)
+- Firebase project setup (see [Authentication Setup](./my-docs/AUTHENTICATION_SETUP.md))
 
-### Installation
+### Quick Start
 
-1. Clone the repository:
+1. **Clone and install**:
 ```bash
 git clone <repository-url>
 cd dealpop-frontend
-```
-
-2. Install dependencies:
-```bash
 npm install
 ```
 
-3. Start the development server:
+2. **Set up environment variables**:
+```bash
+# Copy example environment file
+cp .env.example .env.local
+
+# Add your Firebase configuration
+# See my-docs/AUTHENTICATION_SETUP.md for details
+```
+
+3. **Start development server**:
 ```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173/beta/`
+4. **Open your browser**: Navigate to `http://localhost:5173`
 
-### Available Scripts
+## Documentation
+
+### Core Documentation
+- **[docs/FRONTEND.md](./docs/FRONTEND.md)** - Complete frontend development guide
+- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System architecture and data flows
+- **[docs/AWS_DEPLOYMENT.md](./docs/AWS_DEPLOYMENT.md)** - AWS infrastructure and deployment
+- **[docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md)** - Development guidelines and workflows
+
+### Repository-Specific Documentation
+- **Backend API Documentation** - See the `deal-pop/backend-api` repository for Node.js API setup and endpoints
+- **Chrome Extension Documentation** - See the `deal-pop/chrome-extension` repository for extension development and deployment  
+- **Price Checker Documentation** - See the `deal-pop/puppeteer-scraper` repository for automated price checking service
+
+### Setup Guides
+- **[Authentication Setup](./my-docs/AUTHENTICATION_SETUP.md)** - Firebase Auth configuration
+- **[AWS Setup Guide](./my-docs/AWS_SETUP_SIMPLE.md)** - Basic AWS infrastructure setup
+- **[Deployment Guide](./my-docs/DEPLOYMENT_GUIDE.md)** - Safe deployment with rollback
+
+## Available Scripts
 
 - `npm run dev` - Start the development server
 - `npm run build` - Build the project for production
-- `npm run build:beta` - Build for beta deployment
+- `npm run build:timestamped` - Build with timestamped backup
+- `npm run deploy:safe` - Safe deployment with automatic rollback
+- `npm run rollback` - Rollback to previous deployment
 - `npm run preview` - Preview the production build locally
 - `npm run lint` - Run ESLint to check code quality
-- `npm run deploy:landing` - Deploy landing page to S3 root
-- `npm run deploy:beta` - Deploy React app to S3 /beta/ folder
 
-## HTML Files Explained
+## System Dependencies
 
-### `index.html`
-- **Purpose**: Landing page for root domain (`dealpop.co`)
-- **Content**: "Coming Soon" page with blue background, "DealPop" branding, "Launching Fall 2025!"
-- **Deployment**: Uploaded to S3 bucket root
+DealPop requires coordination between multiple services:
 
-### `beta-index.html`
-- **Purpose**: Template for React app entry point
-- **Content**: Contains `<div id="root"></div>` and script tags for React
-- **Usage**: Used by Vite as template during build process
-- **Deployment**: Built into `dist/index.html` and uploaded to S3 `/beta/` folder
+### Required Services
+1. **Backend API** - Must be running for product data and authentication
+2. **PostgreSQL Database** - Required for data persistence
+3. **Firebase Project** - Required for user authentication
+4. **Chrome Extension** - Optional but recommended for full functionality
 
-### `landing.html`
-- **Purpose**: Standalone backup of landing page
-- **Content**: Same as `index.html` but separate file
-- **Usage**: Backup/reference file
+### Development Setup Order
+1. Set up Firebase project and authentication
+2. Start Backend API with database connection
+3. Start Frontend development server
+4. Load Chrome Extension for testing (optional)
 
-## Project Structure
+## Support & Troubleshooting
 
-```
-dealpop-frontend/
-├── src/
-│   ├── components/           # React components
-│   │   ├── ProductCard.tsx
-│   │   ├── AlertCard.tsx
-│   │   ├── CreateAlertModal.tsx
-│   │   └── ui/              # Reusable UI components
-│   ├── views/               # Page components
-│   │   ├── Dashboard.tsx
-│   │   ├── Login.tsx
-│   │   └── Alerts.tsx
-│   ├── services/            # API and service layer
-│   │   ├── api.ts
-│   │   ├── authAdapter.ts
-│   │   └── chromeStorage.ts
-│   ├── contexts/            # React contexts
-│   │   ├── AuthContext.tsx
-│   │   └── AlertContext.tsx
-│   ├── hooks/               # Custom React hooks
-│   ├── types/               # TypeScript type definitions
-│   ├── utils/               # Utility functions
-│   ├── App.tsx              # Main application component
-│   └── main.tsx             # Application entry point
-├── index.html               # Landing page (root domain)
-├── beta-index.html          # React app template
-├── landing.html             # Backup landing page
-├── vite.config.ts           # Vite configuration (base: '/beta/')
-├── tailwind.config.cjs      # Tailwind CSS configuration
-├── tsconfig.json            # TypeScript configuration
-└── package.json             # Project dependencies
-```
-
-## Customization
-
-### Theme Colors
-
-The project uses a custom color palette defined in `tailwind.config.ts`:
-
-- `bg`: Light blue background (#e6f6fb)
-- `pink`: Light pink accent (#f9cfe4)
-- `accent`: Bright pink (#ff0099)
-- `grayText`: Gray text color (#666)
-
-### Adding New Components
-
-1. Create your component in the `src/components/` directory
-2. Import and use it in `App.tsx` or other components
-3. Style it using Tailwind CSS classes
-
-## Technologies Used
-
-- **Vite** - Build tool and development server
-- **React** - UI library
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Utility-first CSS framework
-- **PostCSS** - CSS processing
-- **ESLint** - Code linting
-
-## AWS S3 Deployment
-
-### Prerequisites
-- AWS CLI configured with appropriate credentials
-- S3 bucket created and configured for static website hosting
-- CloudFront distribution (optional but recommended)
-
-### Deployment Process
-
-#### 1. Deploy Landing Page
-```bash
-npm run deploy:landing
-```
-- Uploads `index.html` to S3 bucket root
-- Serves at `dealpop.co`
-
-#### 2. Deploy Beta Application
-```bash
-npm run deploy:beta
-```
-- Builds React app with `/beta/` base path
-- Uploads built files to S3 `/beta/` folder
-- Serves at `dealpop.co/beta`
-
-#### 3. Manual Deployment
-```bash
-# Build React app
-npm run build:beta
-
-# Upload landing page to root
-aws s3 cp index.html s3://your-bucket-name/
-
-# Upload React app to /beta/ folder
-aws s3 sync dist/ s3://your-bucket-name/beta/ --delete
-```
-
-### S3 Bucket Structure
-```
-your-bucket-name/
-├── index.html              # Landing page (dealpop.co)
-├── icon.png                # Favicon
-└── beta/
-    ├── index.html          # React app (dealpop.co/beta)
-    └── assets/             # React app assets
-        ├── index-[hash].js
-        ├── index-[hash].css
-        └── icon-[hash].png
-```
-
-### CloudFront Cache Invalidation
-After deployment, invalidate CloudFront cache:
-```bash
-aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
-```
-
-## Backend Integration
-
-### API Configuration
-The frontend connects to the backend API through:
-- **Base URL**: `https://bzu99jbwnr.us-east-2.awsapprunner.com`
-- **Authentication**: Firebase Auth tokens
-- **Endpoints**: Product tracking, alerts, user management
-
-### Environment Variables
-Create `.env.production` for production builds:
-```env
-VITE_API_BASE_URL=https://bzu99jbwnr.us-east-2.awsapprunner.com
-```
-
-Create `.env.development` for local development:
-```env
-VITE_API_BASE_URL=http://localhost:3000
-```
-
-## Chrome Extension Integration
-
-### Communication
-- **Chrome Storage API**: Stores user preferences and tracked products
-- **Message Passing**: Communicates with extension background scripts
-- **Product Detection**: Extension detects products on shopping websites
-- **Price Tracking**: Sends price data to backend for monitoring
-
-### Key Services
-- `chromeStorage.ts`: Chrome extension storage management
-- `productExtractor.ts`: Product data extraction from web pages
-- `alertService.ts`: Deal alert management
-
-## Environment Variables
-
-### Development
-```env
-VITE_API_BASE_URL=http://localhost:3000
-VITE_ENABLE_AUTH=true
-```
-
-### Production
-```env
-VITE_API_BASE_URL=https://bzu99jbwnr.us-east-2.awsapprunner.com
-VITE_ENABLE_AUTH=true
-```
-
-### Firebase Configuration
-Firebase configuration is handled through the Firebase SDK and environment variables for authentication and data storage.
+- **Common Issues**: See [docs/FRONTEND.md](./docs/FRONTEND.md) troubleshooting section
+- **Deployment Issues**: See [docs/AWS_DEPLOYMENT.md](./docs/AWS_DEPLOYMENT.md)
+- **Authentication Problems**: See [Authentication Setup](./my-docs/AUTHENTICATION_SETUP.md)
+- **Chrome Extension Issues**: See the `deal-pop/chrome-extension` repository
 
 ## License
 
