@@ -21,16 +21,6 @@ export default function LandingPage() {
           We're excited to meet you!
         </p>
         
-        {/* Privacy Policy Link */}
-        <div className="mt-8">
-          <a 
-            href="/privacy"
-            className="text-sm text-white/70 hover:text-white transition-colors duration-300 underline underline-offset-2"
-          >
-            Privacy Policy
-          </a>
-        </div>
-        
         {/* Decorative arrow */}
         <svg className="absolute right-10 top-1/2 transform -translate-y-1/2 w-20 h-20 opacity-80 hidden md:block" viewBox="0 0 100 100">
           <path 

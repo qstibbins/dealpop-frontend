@@ -25,9 +25,9 @@ export default function ProtectedRoute({ children, fallback }: ProtectedRoutePro
     const currentPath = window.location.pathname;
     if (currentPath === '/beta') {
       // Preserve URL parameters (like ?extension=true) when showing login
-      return fallback || <Navigate to={`/login${window.location.search}`} />;
+      return fallback || <Navigate to={`/beta/login${window.location.search}`} />;
     }
-    return fallback || <Navigate to="/login" />;
+    return fallback || <Navigate to="/beta/login" />;
   }
 
   return children;

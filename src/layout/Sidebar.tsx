@@ -18,7 +18,7 @@ export default function Sidebar() {
   const handleLogout = async () => {
     const result = await signOut();
     if (!result.error) {
-      navigate('/login');
+      navigate('/beta/login');
     }
   };
 
@@ -39,8 +39,8 @@ export default function Sidebar() {
       {/* Blue background navigation section */}
       <div className="p-4 min-h-full" style={{ backgroundColor: '#2563eb' }}>
         {/* Navigation */}
-        {navItem('/dashboard', 'Homepage')}
-        {navItem('/settings', 'Settings')}
+        {navItem('/beta/dashboard', 'Homepage')}
+        {navItem('/beta/settings', 'Settings')}
         
         {/* Logout Button */}
         <div className="mt-8">

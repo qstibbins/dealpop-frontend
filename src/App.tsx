@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AlertProvider } from './contexts/AlertContext';
 import ProtectedRoute from './auth/ProtectedRoute';
@@ -18,15 +18,9 @@ function App() {
           {/* Landing page at root - no layout wrapper */}
           <Route path="/" element={<LandingPage />} />
           
-          {/* Privacy Policy - accessible to all */}
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          
-          {/* Beta routes - always show login page */}
-          <Route path="/beta" element={<Login />} />
-          
-          {/* Other protected routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={
+          {/* Beta routes - specific routes first */}
+          <Route path="/beta/login" element={<Login />} />
+          <Route path="/beta/dashboard" element={
             <ProtectedRoute>
               <div className="flex">
                 <Sidebar />
@@ -34,7 +28,7 @@ function App() {
               </div>
             </ProtectedRoute>
           } />
-          <Route path="/settings" element={
+          <Route path="/beta/settings" element={
             <ProtectedRoute>
               <div className="flex">
                 <Sidebar />
@@ -42,10 +36,15 @@ function App() {
               </div>
             </ProtectedRoute>
           } />
+          <Route path="/beta/privacy" element={<PrivacyPolicy />} />
+          
+          {/* General beta route - should come last */}
+          <Route path="/beta" element={<Navigate to="/beta/login" replace />} />
+          
         </Routes>
       </AlertProvider>
     </AuthProvider>
   )
 }
 
-export default App 
+export default App

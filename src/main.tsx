@@ -9,17 +9,7 @@ import { BrowserRouter } from 'react-router-dom';
 
 // Determine basename based on current path
 const getBasename = () => {
-  // If we're running locally in dev mode, no basename
-  if (import.meta.env.DEV) {
-    return '/'
-  }
-  
-  // If we're in production and the URL contains /beta/, use /beta
-  if (window.location.pathname.startsWith('/beta')) {
-    return '/beta'
-  }
-  
-  // Otherwise, use root
+  // Always use root basename - routes are defined with full paths
   return '/'
 }
 

@@ -181,18 +181,18 @@ export default function CreateAlertModal({ isOpen, onClose, productData, existin
         isOpen={isOpen}
         onClose={onClose}
         title={existingAlert ? "Update Price Alert" : "Create Price Alert"}
-        size="md"
+        size="lg"
       >
         {productData && (
-          <div className="flex items-center space-x-3 mb-4 p-3 bg-gray-50 rounded">
+          <div className="flex items-start space-x-3 mb-4 p-3 bg-gray-50 rounded">
             <img 
               src={productData.image} 
               alt={productData.name} 
-              className="h-12 w-12 object-contain"
+              className="h-12 w-12 object-contain flex-shrink-0"
             />
-            <div>
-              <h3 className="font-semibold text-sm">{productData.name}</h3>
-              <p className="text-sm text-gray-600">{formatPrice(productData.currentPrice)}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-sm break-words leading-tight">{productData.name}</h3>
+              <p className="text-sm text-gray-600 mt-1">{formatPrice(productData.currentPrice)}</p>
             </div>
           </div>
         )}

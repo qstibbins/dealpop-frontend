@@ -30,7 +30,7 @@ export default function Login() {
         // The extension auth UI will be shown by the render logic below
       } else {
         console.log('🔍 User already authenticated, redirecting to dashboard');
-        navigate('/dashboard', { replace: true });
+        navigate('/beta/dashboard', { replace: true });
       }
     }
   }, [user, authLoading, navigate]);
@@ -160,7 +160,7 @@ export default function Login() {
     if (result.error) {
       setError(result.error);
     } else {
-      navigate('/dashboard');
+      navigate('/beta/dashboard');
     }
     setLoading(false);
   };
@@ -194,7 +194,7 @@ export default function Login() {
       } else {
         console.log('📊 Email signup successful');
       }
-      navigate('/dashboard');
+      navigate('/beta/dashboard');
     }
     setLoading(false);
   };

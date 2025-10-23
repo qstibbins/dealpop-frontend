@@ -98,7 +98,7 @@ export default function Dashboard() {
   // Check authentication and redirect if needed
   useEffect(() => {
     if (!user) {
-      navigate('/login');
+      navigate('/beta/login');
       return;
     }
   }, [user, navigate]);
@@ -455,7 +455,7 @@ export default function Dashboard() {
             <div className="space-x-2">
               {error.includes('Authentication issue') ? (
                 <button
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/beta/login')}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                 >
                   Go to Login
